@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFDA Factoring Quest</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --color-text-primary:#111827;--color-text-secondary:#6B7280;--color-text-tertiary:#9CA3AF;
+  --color-background-primary:#ffffff;--color-background-secondary:#F9FAFB;
+  --color-border-tertiary:#E5E7EB;--color-border-secondary:#D1D5DB;
+  --border-radius-md:8px;--border-radius-lg:12px;
+  --font-sans:'Nunito',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --c3:#059669;--c3l:#D1FAE5;--c3m:#6EE7B7;
+}
+body{font-family:'Nunito',sans-serif;background:#F3F4F6;min-height:100vh;padding:2rem 1rem;}
+.wrap{max-width:720px;margin:auto;background:#fff;border-radius:20px;padding:2rem;box-shadow:0 4px 24px rgba(0,0,0,0.08);}
+.game-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.game-title{font-size:22px;font-weight:900;color:var(--color-text-primary);letter-spacing:-0.3px;}
+.xp-bar-wrap{display:flex;align-items:center;gap:8px;}
+.xp-label{font-size:12px;font-weight:700;color:var(--color-text-secondary);}
+.xp-pill{background:#F3F4F6;border:1.5px solid #D1D5DB;border-radius:999px;padding:4px 14px;font-size:14px;font-weight:800;color:#111827;min-width:64px;text-align:center;transition:transform 0.2s;}
+.xp-pill.pop{animation:xppop 0.4s ease;}
+@keyframes xppop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.step-track{display:flex;align-items:center;justify-content:center;margin-bottom:2rem;}
+.step-line{flex:1;height:3px;background:#E5E7EB;transition:background 0.4s;max-width:80px;}
+.step-line.done{background:#059669;}
+.step-node{width:46px;height:46px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:2.5px solid #E5E7EB;background:#fff;cursor:pointer;transition:all 0.3s;color:#9CA3AF;position:relative;z-index:1;flex-shrink:0;}
+.step-node .sn-icon{font-size:17px;line-height:1;}
+.step-node.active{border-color:var(--node-color);background:var(--node-color);color:#fff;transform:scale(1.15);box-shadow:0 0 0 5px color-mix(in srgb,var(--node-color) 20%,transparent);}
+.step-node.done-node{border-color:#059669;background:#059669;color:#fff;}
+.step-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;white-space:nowrap;color:#9CA3AF;}
+.step-node.active .step-label{color:var(--node-color);}
+.step-node.done-node .step-label{color:#059669;}
+.step-wrap{display:flex;flex-direction:column;align-items:center;padding-bottom:24px;}
+.section{display:none;animation:fadeIn 0.3s ease;}
+.section.visible{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.level-badge{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;margin-bottom:1.25rem;border:1.5px solid var(--level-border);background:var(--level-bg);}
+.level-badge .lb-icon{font-size:28px;}
+.level-badge .lb-title{font-size:16px;font-weight:800;color:var(--level-color);}
+.level-badge .lb-sub{font-size:12px;color:#6B7280;font-weight:600;margin-top:2px;}
+.concept-box{background:#F9FAFB;border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.25rem;border-left:4px solid var(--level-color);}
+.concept-box h2{font-size:14px;font-weight:800;margin-bottom:6px;color:#111827;}
+.concept-box p{font-size:13px;color:#6B7280;line-height:1.7;font-weight:600;}
+.concept-box .example{margin-top:10px;font-size:13px;background:#fff;border-radius:10px;padding:10px 14px;color:#111827;font-family:'JetBrains Mono',monospace;border:1px solid #E5E7EB;line-height:1.8;}
+.q-card{background:#fff;border:1.5px solid #E5E7EB;border-radius:16px;padding:1.1rem 1.25rem;margin-bottom:1rem;transition:border-color 0.3s;}
+.q-card.shake{animation:shake 0.4s ease;}
+.q-card.bounce-in{animation:bounceIn 0.4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes bounceIn{0%{transform:scale(1)}30%{transform:scale(1.03)}60%{transform:scale(0.98)}100%{transform:scale(1)}}
+.q-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.q-label{font-size:11px;font-weight:800;color:var(--level-color);text-transform:uppercase;letter-spacing:0.06em;}
+.q-pts{font-size:11px;font-weight:800;color:#9CA3AF;background:#F3F4F6;padding:2px 10px;border-radius:999px;}
+.q-text{font-size:15px;font-weight:700;color:#111827;margin-bottom:12px;line-height:1.6;}
+.math{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;}
+.choices{display:flex;flex-direction:column;gap:7px;}
+.choice{padding:10px 14px;border:2px solid #E5E7EB;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;color:#111827;background:#fff;transition:all 0.15s;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:8px;}
+.choice::before{content:'';width:14px;height:14px;border-radius:50%;border:2px solid #D1D5DB;flex-shrink:0;transition:all 0.15s;}
+.choice:hover:not(.locked){border-color:var(--level-color);background:var(--level-bg);transform:translateX(2px);}
+.choice:hover:not(.locked)::before{border-color:var(--level-color);}
+.choice.correct{background:#D1FAE5;border-color:#059669;color:#065F46;}
+.choice.correct::before{background:#059669;border-color:#059669;}
+.choice.wrong{background:#FEE2E2;border-color:#EF4444;color:#7F1D1D;}
+.choice.wrong::before{background:#EF4444;border-color:#EF4444;}
+.fill-row{display:flex;gap:8px;align-items:center;}
+.fill-row input{flex:1;padding:10px 14px;border:2px solid #D1D5DB;border-radius:12px;font-size:14px;font-family:'JetBrains Mono',monospace;font-weight:600;color:#111827;background:#fff;transition:border-color 0.2s;outline:none;}
+.fill-row input:focus{border-color:var(--level-color);}
+.fill-row input.correct{border-color:#059669;background:#D1FAE5;color:#065F46;}
+.fill-row input.wrong{border-color:#EF4444;background:#FEE2E2;color:#7F1D1D;}
+.fill-row button{padding:10px 18px;border:2px solid var(--level-color);border-radius:12px;background:var(--level-color);cursor:pointer;font-size:14px;font-weight:800;color:#fff;font-family:'Nunito',sans-serif;transition:opacity 0.15s;}
+.fill-row button:hover{opacity:0.85;}
+.feedback{margin-top:10px;font-size:13px;font-weight:700;padding:10px 14px;border-radius:12px;display:none;line-height:1.6;}
+.feedback.show{display:block;animation:fadeIn 0.3s ease;}
+.feedback.ok{background:#D1FAE5;color:#065F46;border:1.5px solid #6EE7B7;}
+.feedback.bad{background:#FEF3C7;color:#78350F;border:1.5px solid #FCD34D;}
+.nav-row{display:flex;justify-content:space-between;margin-top:1rem;}
+.nav-btn{padding:10px 20px;border:2px solid #D1D5DB;border-radius:12px;background:#fff;cursor:pointer;font-size:14px;font-weight:800;color:#6B7280;font-family:'Nunito',sans-serif;transition:background 0.15s;}
+.nav-btn:hover{background:#F9FAFB;}
+.nav-btn.primary{background:var(--level-color);border-color:var(--level-color);color:#fff;}
+.nav-btn.primary:hover{opacity:0.88;}
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;z-index:9999;animation:confettiFall linear forwards;}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0deg);opacity:1;}100%{transform:translateY(100vh) rotate(720deg);opacity:0;}}
+.results-wrap{text-align:center;padding:1rem 0 1.5rem;}
+.results-trophy{font-size:60px;margin-bottom:0.5rem;animation:bounceIn 0.5s ease;}
+.results-score{font-size:38px;font-weight:900;color:#111827;margin-bottom:4px;}
+.results-msg{font-size:15px;font-weight:700;color:#6B7280;margin-bottom:1.5rem;}
+.xp-earned{display:inline-block;background:#EDE9FE;color:#5B21B6;padding:6px 22px;border-radius:999px;font-size:14px;font-weight:800;margin-bottom:1.25rem;}
+.section-results{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem;text-align:left;}
+.sr-row{display:flex;align-items:center;justify-content:space-between;background:#F9FAFB;border-radius:12px;padding:10px 16px;}
+.sr-name{font-size:14px;font-weight:700;color:#111827;}
+.sr-score{font-size:13px;font-weight:800;color:#6B7280;}
+.sr-stars{font-size:15px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="game-header">
+    <div class="game-title">AFDA Factoring Quest</div>
+    <div class="xp-bar-wrap">
+      <div class="xp-label">XP</div>
+      <div class="xp-pill" id="xp-display">0</div>
+    </div>
+  </div>
+  <div class="step-track" id="step-track"></div>
+  <div id="sec-0" class="section visible"></div>
+  <div id="sec-1" class="section"></div>
+  <div id="sec-2" class="section"></div>
+  <div id="sec-3" class="section"></div>
+  <div id="sec-done" class="section"></div>
+</div>
+<script>
+const LEVELS=[
+  {id:0,icon:'🔍',label:'Level 1',name:'GCF Factoring',color:'#7C3AED',bg:'#EDE9FE',border:'#C4B5FD',
+    concept:{title:'GCF Factoring — Key Concepts',body:'The <b>Greatest Common Factor (GCF)</b> is the largest factor that divides evenly into all terms. Steps: (1) Find GCF of all coefficients and variables, (2) Divide each term by the GCF, (3) Write as GCF × (remaining expression).',example:'Example: 12x³ + 8x²\nGCF = 4x²\n= 4x²(3x + 2)'},
+    qs:[
+      {type:'mc',text:'What is the GCF of <span class="math">18x⁴ + 12x²</span>?',opts:['6x²','6x⁴','12x²','18x'],ans:'6x²',pts:10,hint:'🔎 GCF of 18 & 12 is 6. GCF of x⁴ & x² is x². So GCF = 6x².'},
+      {type:'fill',text:'Factor completely: <span class="math">15y³ − 10y</span><br><span style="font-size:12px;font-weight:600;color:#6B7280">Write like: 5y(3y²−2)</span>',ans:'5y(3y²−2)',alts:['5y(3y²-2)','5y(3y2-2)'],pts:15,hint:'💡 GCF of 15y³ and 10y is 5y. Divide: 15y³÷5y = 3y², 10y÷5y = 2. Answer: 5y(3y²−2)'},
+      {type:'mc',text:'Which is the fully factored form of <span class="math">24a²b³ − 16ab²</span>?',opts:['8ab²(3ab − 2)','4ab(6ab² − 4b)','8ab²(3a − 2b)','16ab²(a − 1)'],ans:'8ab²(3ab − 2)',pts:15,hint:'🧮 GCF of 24 & 16 is 8. GCF of a²b³ & ab² is ab². So 8ab²(3ab − 2).'},
+    ]},
+  {id:1,icon:'📐',label:'Level 2',name:'Monomials & Polynomials',color:'#0891B2',bg:'#E0F7FA',border:'#67E8F9',
+    concept:{title:'Monomials & Polynomials — Key Concepts',body:'A <b>monomial</b> is a single term (e.g. 5x², −3xy). A <b>polynomial</b> is a sum of monomials. The <b>degree</b> is the highest sum of exponents in any term. Classify by terms: mono(1), bi(2), tri(3).',example:'4x³y² → monomial, degree 5\n3x² − 2x + 7 → polynomial, degree 2'},
+    qs:[
+      {type:'mc',text:'What is the degree of <span class="math">7x⁴y² − 3x²y + 5</span>?',opts:['4','6','3','2'],ans:'6',pts:10,hint:'🎓 The degree of 7x⁴y² is 4+2=6. That is the highest, so the polynomial degree is 6.'},
+      {type:'mc',text:'Which expression is NOT a monomial?',opts:['−9','4x²y³','x + 2','7ab'],ans:'x + 2',pts:10,hint:'💡 A monomial has exactly one term. "x + 2" has two terms — it is a binomial, not a monomial.'},
+      {type:'fill',text:'Simplify: <span class="math">5x² + 3x − 2x² + 7 − x</span><br><span style="font-size:12px;font-weight:600;color:#6B7280">Enter in standard form (e.g. 3x²+2x+7)</span>',ans:'3x²+2x+7',alts:['3x² + 2x + 7'],pts:15,hint:'🔢 Like terms: 5x²−2x²=3x², 3x−x=2x, constant=7 → 3x²+2x+7'},
+    ]},
+  {id:2,icon:'✌️',label:'Level 3',name:'Binomials',color:'#D97706',bg:'#FEF3C7',border:'#FCD34D',
+    concept:{title:'Binomials — Key Concepts',body:'A <b>binomial</b> has exactly two terms. Use <b>FOIL</b> to multiply: First, Outer, Inner, Last. Special patterns: <em>Difference of Squares</em>: (a+b)(a−b) = a²−b². <em>Perfect Square</em>: (a+b)² = a²+2ab+b².',example:'FOIL: (x+3)(x−5)\n= x²−5x+3x−15\n= x² − 2x − 15'},
+    qs:[
+      {type:'mc',text:'Expand using FOIL: <span class="math">(2x + 5)(x − 3)</span>',opts:['2x² − x − 15','2x² + x − 15','2x² − 6x − 15','2x² − x + 15'],ans:'2x² − x − 15',pts:10,hint:'🔍 F:2x², O:−6x, I:+5x, L:−15. Middle: −6x+5x=−x. So 2x²−x−15.'},
+      {type:'mc',text:'Factor using Difference of Squares: <span class="math">x² − 49</span>',opts:['(x+7)(x−7)','(x−7)²','(x+7)²','(x+49)(x−1)'],ans:'(x+7)(x−7)',pts:10,hint:'⭐ x²−49 = x²−7². Difference of Squares: (x+7)(x−7).'},
+      {type:'fill',text:'Expand using Perfect Square pattern: <span class="math">(3x + 4)²</span>',ans:'9x²+24x+16',alts:['9x² + 24x + 16'],pts:15,hint:'💡 (3x)²+2(3x)(4)+4² = 9x²+24x+16'},
+    ]},
+  {id:3,icon:'🏆',label:'Level 4',name:'Trinomials',color:'#059669',bg:'#D1FAE5',border:'#6EE7B7',
+    concept:{title:'Trinomials — Key Concepts',body:'A <b>trinomial</b> has exactly three terms. For ax²+bx+c, find two numbers that multiply to <em>a·c</em> and add to <em>b</em>. When a=1, find two numbers that multiply to c and add to b, then write as two binomial factors.',example:'Factor: x² + 7x + 12\nFind: m×n=12, m+n=7 → 3 and 4\n= (x + 3)(x + 4)'},
+    qs:[
+      {type:'mc',text:'Factor the trinomial: <span class="math">x² − 5x − 14</span>',opts:['(x−7)(x+2)','(x+7)(x−2)','(x−7)(x−2)','(x+7)(x+2)'],ans:'(x−7)(x+2)',pts:10,hint:'🔎 Need m×n=−14, m+n=−5. Try −7 and 2: product=−14 ✓, sum=−5 ✓. So (x−7)(x+2).'},
+      {type:'mc',text:'Factor the trinomial: <span class="math">2x² + 7x + 3</span>',opts:['(2x+1)(x+3)','(2x+3)(x+1)','(x+3)(x+2)','(2x−1)(x−3)'],ans:'(2x+1)(x+3)',pts:10,hint:'🧮 a·c=6. Need m×n=6, m+n=7 → 1 & 6. Rewrite: 2x²+x+6x+3 = x(2x+1)+3(2x+1) = (2x+1)(x+3).'},
+      {type:'fill',text:'Factor completely (GCF first, then trinomial): <span class="math">3x² − 12x + 12</span>',ans:'3(x−2)²',alts:['3(x-2)²','3(x-2)^2','3(x−2)^2'],pts:20,hint:'🌟 GCF=3: 3(x²−4x+4). Now factor x²−4x+4: m×n=4, m+n=−4 → −2,−2. Answer: 3(x−2)².'},
+    ]},
+];
+const CORRECT_MSGS=['🎉 Excellent! Keep it up!','⭐ Nailed it! You\'re on fire!','🚀 Perfect! +XP earned!','💥 Boom! That\'s right!','🏅 Awesome work!','✨ Brilliant! You\'ve got this!'];
+const WRONG_MSGS=['💪 Not quite — check the hint below!','🤔 Almost! Read the hint and keep going.','📚 Not this time — the hint will help!','🔄 Close! Use the hint to guide you.'];
+let xp=0,answered={},sectionScores=[null,null,null,null];
+function norm(s){return s.replace(/\s/g,'').replace(/[−–—]/g,'-').toLowerCase();}
+function buildAll(){buildTracker();LEVELS.forEach((lv,i)=>buildSection(lv,i));buildResults();}
+function buildTracker(){
+  const track=document.getElementById('step-track');track.innerHTML='';
+  LEVELS.forEach((lv,i)=>{
+    if(i>0){const line=document.createElement('div');line.className='step-line';line.id='line-'+(i-1);track.appendChild(line);}
+    const wrap=document.createElement('div');wrap.className='step-wrap';
+    const node=document.createElement('div');node.className='step-node'+(i===0?' active':'');node.id='node-'+i;
+    node.style.setProperty('--node-color',lv.color);node.onclick=()=>goTo(i);
+    node.innerHTML=`<span class="sn-icon">${lv.icon}</span>`;
+    const lbl=document.createElement('div');lbl.className='step-label';lbl.textContent=lv.label;node.appendChild(lbl);
+    wrap.appendChild(node);track.appendChild(wrap);
+  });
+  const line=document.createElement('div');line.className='step-line';line.id='line-3';track.appendChild(line);
+  const wrap=document.createElement('div');wrap.className='step-wrap';
+  const node=document.createElement('div');node.className='step-node';node.id='node-done';
+  node.style.setProperty('--node-color','#7C3AED');node.onclick=()=>goTo(4);
+  node.innerHTML='<span class="sn-icon">🎯</span>';
+  const lbl=document.createElement('div');lbl.className='step-label';lbl.textContent='Results';node.appendChild(lbl);
+  wrap.appendChild(node);track.appendChild(wrap);
+}
+function buildSection(lv,i){
+  const sec=document.getElementById('sec-'+i);
+  sec.style.setProperty('--level-color',lv.color);sec.style.setProperty('--level-bg',lv.bg);sec.style.setProperty('--level-border',lv.border);
+  let html=`<div class="level-badge"><span class="lb-icon">${lv.icon}</span><div><div class="lb-title">${lv.label}: ${lv.name}</div><div class="lb-sub">3 questions · earn up to ${lv.qs.reduce((a,q)=>a+q.pts,0)} XP</div></div></div>`;
+  html+=`<div class="concept-box"><h2>${lv.concept.title}</h2><p>${lv.concept.body}</p><div class="example">${lv.concept.example.replace(/\n/g,'<br>')}</div></div>`;
+  lv.qs.forEach((q,qi)=>{
+    const key=i+'-'+qi;
+    html+=`<div class="q-card" id="qc-${key}"><div class="q-meta"><div class="q-label">Question ${qi+1} of 3</div><div class="q-pts">+${q.pts} XP</div></div><div class="q-text">${q.text}</div>`;
+    if(q.type==='mc'){
+      html+=`<div class="choices" id="choices-${key}">`;
+      q.opts.forEach(o=>{html+=`<div class="choice" onclick="mc('${key}',this,'${o.replace(/'/g,"\\'")}',${i})">${o}</div>`;});
+      html+=`</div>`;
+    } else {
+      html+=`<div class="fill-row"><input type="text" id="fi-${key}" placeholder="type your answer..."/><button onclick="checkFill('${key}',${i},${qi})">Check ↗</button></div>`;
+    }
+    html+=`<div class="feedback" id="fb-${key}"></div></div>`;
+  });
+  const prevBtn=i>0?`<button class="nav-btn" onclick="goTo(${i-1})">← Back</button>`:`<span></span>`;
+  const nextLabel=i<3?`Next: ${LEVELS[i+1].name} →`:'Finish & See Results 🏆';
+  const nextAct=i<3?`goTo(${i+1})`:`showResults()`;
+  html+=`<div class="nav-row">${prevBtn}<button class="nav-btn primary" onclick="${nextAct}">${nextLabel}</button></div>`;
+  sec.innerHTML=html;
+}
+function buildResults(){
+  document.getElementById('sec-done').innerHTML=`<div class="results-wrap"><div class="results-trophy" id="res-trophy">🏆</div><div class="results-score" id="res-score">— / 12</div><div class="results-msg" id="res-msg"></div><div class="xp-earned" id="res-xp">0 XP earned</div><div class="section-results" id="res-sections"></div><button class="nav-btn primary" style="--level-color:#7C3AED;margin:0 auto;display:block;" onclick="restart()">Play Again 🔄</button></div>`;
+}
+function goTo(n){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('visible'));
+  document.getElementById(n<4?'sec-'+n:'sec-done').classList.add('visible');
+  document.querySelectorAll('.step-node').forEach(nd=>nd.classList.remove('active'));
+  if(n<4){document.getElementById('node-'+n).classList.add('active');const lv=LEVELS[n];document.getElementById('sec-'+n).style.setProperty('--level-color',lv.color);}
+  else document.getElementById('node-done').classList.add('active');
+}
+function mc(key,el,val,secIdx){
+  if(answered[key])return;const qi=parseInt(key.split('-')[1]);const q=LEVELS[secIdx].qs[qi];answered[key]=val;
+  const isRight=norm(val)===norm(q.ans);
+  el.parentElement.querySelectorAll('.choice').forEach(c=>{c.classList.add('locked');if(norm(c.textContent)===norm(q.ans))c.classList.add('correct');});
+  if(!isRight)el.classList.add('wrong');
+  if(isRight){gainXP(q.pts);bounce('qc-'+key);confetti();}else shake('qc-'+key);
+  showFb(key,isRight,q.hint,secIdx,qi);
+}
+function checkFill(key,secIdx,qi){
+  if(answered[key])return;const q=LEVELS[secIdx].qs[qi];const inp=document.getElementById('fi-'+key);const val=inp.value.trim();if(!val)return;
+  answered[key]=val;const allOk=[q.ans,...(q.alts||[])].map(norm);const isRight=allOk.includes(norm(val));
+  inp.classList.add(isRight?'correct':'wrong');inp.disabled=true;inp.nextElementSibling.disabled=true;
+  if(isRight){gainXP(q.pts);bounce('qc-'+key);confetti();}else shake('qc-'+key);
+  showFb(key,isRight,q.hint,secIdx,qi);
+}
+function showFb(key,ok,hint,secIdx,qi){
+  const fb=document.getElementById('fb-'+key);
+  fb.innerHTML=ok?CORRECT_MSGS[Math.floor(Math.random()*CORRECT_MSGS.length)]:WRONG_MSGS[Math.floor(Math.random()*WRONG_MSGS.length)]+' <br><span style="font-weight:600;">Hint: '+hint+'</span>';
+  fb.className='feedback show '+(ok?'ok':'bad');
+  checkSectionDone(secIdx);
+}
+function checkSectionDone(secIdx){
+  if(!LEVELS[secIdx].qs.every((_,qi)=>answered[secIdx+'-'+qi]))return;
+  let correct=0;LEVELS[secIdx].qs.forEach((q,qi)=>{const a=answered[secIdx+'-'+qi];if(a&&[q.ans,...(q.alts||[])].map(norm).includes(norm(a)))correct++;});
+  sectionScores[secIdx]=correct;
+  document.getElementById('node-'+secIdx).classList.remove('active');document.getElementById('node-'+secIdx).classList.add('done-node');
+  if(secIdx<=3)document.getElementById('line-'+secIdx) && document.getElementById('line-'+secIdx).classList.add('done');
+}
+function gainXP(pts){xp+=pts;const el=document.getElementById('xp-display');el.textContent=xp;el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');}
+function shake(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+function bounce(id){const el=document.getElementById(id);if(!el)return;el.classList.remove('bounce-in');void el.offsetWidth;el.classList.add('bounce-in');}
+function confetti(){
+  const colors=['#7C3AED','#0891B2','#D97706','#059669','#EC4899','#EF4444','#F59E0B'];
+  for(let i=0;i<28;i++){const p=document.createElement('div');p.className='confetti-piece';p.style.left=Math.random()*100+'vw';p.style.top='-10px';p.style.background=colors[Math.floor(Math.random()*colors.length)];p.style.borderRadius=Math.random()>0.5?'50%':'2px';p.style.width=(6+Math.random()*6)+'px';p.style.height=(6+Math.random()*6)+'px';p.style.animationDuration=(1.2+Math.random()*1.2)+'s';p.style.animationDelay=(Math.random()*0.3)+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),2800);}
+}
+function showResults(){
+  let totalCorrect=0,totalAnswered=0;
+  LEVELS.forEach((lv,i)=>lv.qs.forEach((q,qi)=>{const key=i+'-'+qi;if(answered[key]){totalAnswered++;if([q.ans,...(q.alts||[])].map(norm).includes(norm(answered[key])))totalCorrect++;}}));
+  document.getElementById('res-score').textContent=totalCorrect+' / '+totalAnswered+' correct';
+  const pct=totalAnswered>0?Math.round(totalCorrect/totalAnswered*100):0;
+  let msg,trophy;
+  if(pct>=90){msg='🌟 Incredible! You\'re a factoring master!';trophy='🏆';}
+  else if(pct>=75){msg='🎉 Great job! Strong work across the board.';trophy='🥇';}
+  else if(pct>=60){msg='💪 Nice effort! A little more practice and you\'ll ace it.';trophy='🥈';}
+  else{msg='📚 Keep at it — review the concept cards and try again!';trophy='🔁';}
+  document.getElementById('res-trophy').textContent=trophy;document.getElementById('res-msg').textContent=msg;document.getElementById('res-xp').textContent=xp+' XP earned';
+  const sr=document.getElementById('res-sections');sr.innerHTML='';
+  LEVELS.forEach((lv,i)=>{const sc=sectionScores[i];const stars=sc===null?'—':sc===3?'⭐⭐⭐':sc===2?'⭐⭐':sc===1?'⭐':'';const row=document.createElement('div');row.className='sr-row';row.innerHTML=`<span class="sr-name">${lv.icon} ${lv.name}</span><span class="sr-stars">${stars}</span><span class="sr-score">${sc===null?'not completed':sc+' / 3'}</span>`;sr.appendChild(row);});
+  if(pct>=80)setTimeout(()=>{confetti();setTimeout(confetti,400);},200);
+  goTo(4);
+}
+function restart(){answered={};sectionScores=[null,null,null,null];xp=0;document.getElementById('xp-display').textContent='0';buildAll();goTo(0);}
+buildAll();
+</script>
+</body>
+</html>
