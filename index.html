@@ -1,0 +1,1956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFDA Quest — A Mathematical Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ===========================
+   BASE & RESET
+=========================== */
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --dark:#0a0a14;
+  --dark2:#12122a;
+  --dark3:#1a1a3a;
+  --text:#e8e8f0;
+  --text-muted:#7a7a9a;
+  --gold:#f5c542;
+  --red:#ff4757;
+  --green:#2ecc71;
+  --blue:#4fc3f7;
+}
+html,body{width:100%;min-height:100vh;background:var(--dark);color:var(--text);font-family:'Nunito',sans-serif;overflow-x:hidden;}
+
+/* Starfield background */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 25%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 10%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 45% 65%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 88% 40%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(2px 2px at 60% 15%,rgba(255,255,255,.15) 0%,transparent 100%),
+    radial-gradient(1px 1px at 35% 90%,rgba(255,255,255,.25) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 70%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(1px 1px at 22% 55%,rgba(255,255,255,.15) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 68% 80%,rgba(255,255,255,.2) 0%,transparent 100%);
+}
+
+/* ===========================
+   SCREENS
+=========================== */
+.screen{display:none;position:relative;z-index:1;min-height:100vh;width:100%;max-width:820px;margin:0 auto;padding:1.5rem;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ===========================
+   SHARED COMPONENTS
+=========================== */
+.btn{padding:13px 28px;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;letter-spacing:.4px;}
+.btn-gold{background:linear-gradient(135deg,#f5c542,#e5a010);color:#1a0a00;box-shadow:0 4px 20px rgba(245,197,66,.3);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(245,197,66,.5);}
+.btn-ghost{background:transparent;color:var(--text-muted);border:2px solid rgba(255,255,255,.15);}
+.btn-ghost:hover{border-color:rgba(255,255,255,.4);color:var(--text);}
+.btn-red{background:rgba(255,71,87,.15);color:#ff8896;border:2px solid rgba(255,71,87,.4);}
+.btn-red:hover{background:rgba(255,71,87,.25);}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes bounceIn{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{text-shadow:0 0 30px rgba(245,197,66,.6)}50%{text-shadow:0 0 70px rgba(245,197,66,1)}}
+@keyframes mhit{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes mshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-60px)}}
+@keyframes levelPulse{0%,100%{text-shadow:0 0 40px rgba(245,197,66,.7)}50%{text-shadow:0 0 80px rgba(245,197,66,1),0 0 120px rgba(245,197,66,.4)}}
+
+/* ===========================
+   TITLE SCREEN
+=========================== */
+#screen-title{align-items:center;justify-content:center;text-align:center;gap:1.25rem;padding-top:3rem;}
+.title-eyebrow{font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:4px;text-transform:uppercase;}
+.title-logo{font-family:'Cinzel',serif;font-size:58px;font-weight:900;color:var(--gold);text-shadow:0 0 40px rgba(245,197,66,.4),0 0 80px rgba(245,197,66,.15);letter-spacing:6px;line-height:1.05;}
+.title-sub{font-size:15px;color:var(--text-muted);font-weight:600;letter-spacing:2px;}
+.vdoe-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:999px;padding:6px 16px;font-size:12px;font-weight:700;color:var(--blue);letter-spacing:1px;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:999px;padding:6px 16px;font-size:12px;font-weight:700;color:var(--blue);letter-spacing:1px;}
+/* SAVE/LOAD MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:150;justify-content:center;align-items:center;padding:1rem;}
+.modal-overlay.show{display:flex;animation:fadeIn .3s ease;}
+.modal-card{background:var(--dark2);border:2px solid rgba(245,197,66,.25);border-radius:24px;padding:1.75rem;max-width:440px;width:100%;display:flex;flex-direction:column;gap:.9rem;text-align:center;}
+.modal-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold);}
+.modal-sub{font-size:13px;color:var(--text-muted);font-weight:600;line-height:1.65;}
+.save-info-card{background:var(--dark3);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:1rem;text-align:left;display:flex;flex-direction:column;gap:5px;}
+.si-name{font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold);}
+.si-meta{font-size:12px;color:var(--text-muted);font-weight:600;}
+.si-stats{display:flex;gap:12px;margin-top:4px;flex-wrap:wrap;}
+.si-stat{font-size:11px;font-weight:800;color:var(--text-muted);background:rgba(255,255,255,.06);padding:3px 10px;border-radius:999px;}
+.si-stat span{color:var(--text);}
+.modal-btns{display:flex;flex-direction:column;gap:8px;}
+.title-footer{margin-top:.5rem;display:flex;gap:16px;align-items:center;justify-content:center;}
+.teacher-link{font-size:12px;font-weight:700;color:var(--text-muted);cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:color .15s;background:none;border:none;font-family:'Nunito',sans-serif;}
+.teacher-link:hover{color:var(--gold);}
+/* TEACHER PASSWORD MODAL */
+.pw-input{width:100%;padding:12px 18px;background:var(--dark3);border:2px solid rgba(255,255,255,.15);border-radius:12px;color:var(--text);font-size:16px;font-family:'Nunito',sans-serif;font-weight:700;text-align:center;outline:none;transition:border-color .2s;letter-spacing:4px;}
+.pw-input:focus{border-color:var(--gold);}
+.pw-error{font-size:12px;font-weight:700;color:var(--red);display:none;}
+.pw-error.show{display:block;}
+/* TEACHER DASHBOARD */
+#screen-teacher{gap:1rem;padding-bottom:2rem;}
+.td-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.td-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold);}
+.td-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.td-btn{padding:8px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:var(--text-muted);}
+.td-btn:hover{background:rgba(255,255,255,.06);color:var(--text);}
+.td-btn.green{border-color:rgba(46,204,113,.4);color:#2ecc71;}
+.td-btn.green:hover{background:rgba(46,204,113,.1);}
+.td-btn.red{border-color:rgba(255,71,87,.4);color:#ff4757;}
+.td-btn.red:hover{background:rgba(255,71,87,.1);}
+.td-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.7rem;}
+.td-stat-card{background:var(--dark2);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.9rem;text-align:center;}
+.td-stat-val{font-size:24px;font-weight:900;color:var(--gold);}
+.td-stat-lbl{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px;}
+.td-section-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:3px;text-transform:uppercase;margin-top:.5rem;}
+.student-list{display:flex;flex-direction:column;gap:.75rem;}
+.s-card{background:var(--dark2);border:1px solid rgba(255,255,255,.07);border-radius:18px;overflow:hidden;transition:border-color .2s;}
+.s-card.expanded{border-color:rgba(245,197,66,.2);}
+.s-card-header{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.1rem;cursor:pointer;gap:10px;}
+.s-card-header:hover{background:rgba(255,255,255,.02);}
+.s-left{display:flex;align-items:center;gap:10px;}
+.s-avatar{width:40px;height:40px;border-radius:50%;background:var(--dark3);border:2px solid rgba(245,197,66,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.s-name{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--gold);}
+.s-subtitle{font-size:11px;color:var(--text-muted);font-weight:700;margin-top:1px;}
+.s-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;}
+.s-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap;}
+.s-badge.gold{background:rgba(245,197,66,.1);color:var(--gold);border:1px solid rgba(245,197,66,.3);}
+.s-badge.blue{background:rgba(79,195,247,.1);color:var(--blue);border:1px solid rgba(79,195,247,.3);}
+.s-badge.green{background:rgba(46,204,113,.1);color:#2ecc71;border:1px solid rgba(46,204,113,.3);}
+.s-chevron{font-size:12px;color:var(--text-muted);transition:transform .2s;}
+.s-card.expanded .s-chevron{transform:rotate(180deg);}
+.s-detail{display:none;padding:0 1.1rem 1rem;border-top:1px solid rgba(255,255,255,.06);}
+.s-card.expanded .s-detail{display:block;animation:fadeIn .25s ease;}
+.s-detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem;margin-top:.75rem;}
+.s-dungeon-row{background:var(--dark3);border-radius:12px;padding:.75rem;display:flex;flex-direction:column;gap:6px;}
+.s-dung-top{display:flex;align-items:center;justify-content:space-between;}
+.s-dung-name{font-size:12px;font-weight:800;color:var(--text);}
+.s-dung-stars{font-size:11px;}
+.s-dung-bar-bg{height:5px;background:rgba(255,255,255,.08);border-radius:999px;}
+.s-dung-bar{height:5px;border-radius:999px;transition:width .5s ease;}
+.s-dung-stats{display:flex;gap:8px;}
+.s-dung-stat{font-size:10px;font-weight:800;color:var(--text-muted);}
+.s-dung-stat span{color:var(--text);}
+.s-run-history{margin-top:.75rem;}
+.s-run-title{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.s-run-table{width:100%;border-collapse:collapse;font-size:11px;}
+.s-run-table th{text-align:left;padding:4px 8px;color:var(--text-muted);font-weight:800;font-size:10px;text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid rgba(255,255,255,.07);}
+.s-run-table td{padding:5px 8px;color:var(--text);font-weight:600;border-bottom:1px solid rgba(255,255,255,.04);}
+.s-del-btn{margin-top:.75rem;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);color:#ff8896;transition:all .15s;}
+.s-del-btn:hover{background:rgba(255,71,87,.2);}
+.td-empty{text-align:center;padding:3rem 1rem;color:var(--text-muted);font-size:14px;font-weight:600;}
+.save-indicator{position:fixed;bottom:16px;right:16px;background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:7px 14px;font-size:12px;font-weight:800;color:#2ecc71;z-index:100;display:none;}
+.save-indicator.show{display:block;animation:fadeIn .3s ease;}
+.mode-banner{position:fixed;bottom:0;left:0;right:0;z-index:50;padding:5px 14px;font-size:11px;font-weight:800;text-align:center;letter-spacing:.5px;}
+.mode-banner.local{background:rgba(245,197,66,.12);color:#f5c542;border-top:1px solid rgba(245,197,66,.2);}
+.mode-banner.cloud{background:rgba(46,204,113,.12);color:#2ecc71;border-top:1px solid rgba(46,204,113,.2);}
+.resume-banner{background:var(--dark2);border:1.5px solid rgba(245,197,66,.35);border-radius:16px;padding:.85rem 1.1rem;display:none;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.resume-banner.show{display:flex;animation:fadeIn .3s ease;}
+.rb-left{display:flex;align-items:center;gap:10px;}
+.rb-icon{font-size:24px;}
+.rb-text{font-size:13px;font-weight:700;color:var(--text);}
+.rb-sub{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:2px;}
+.rb-btns{display:flex;gap:8px;}
+.rb-btn{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;border:none;transition:all .15s;}
+.rb-btn.gold{background:linear-gradient(135deg,#f5c542,#e5a010);color:#1a0a00;}
+.rb-btn.gold:hover{opacity:.88;}
+.rb-btn.ghost{background:transparent;border:1.5px solid rgba(255,255,255,.15);color:var(--text-muted);}
+.rb-btn.ghost:hover{border-color:rgba(255,255,255,.35);color:var(--text);}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;}
+.loading-overlay.show{display:flex;animation:fadeIn .25s ease;}
+.lo-icon{font-size:44px;animation:float 1s ease-in-out infinite;}
+.lo-text{font-family:'Cinzel',serif;font-size:15px;color:var(--gold);letter-spacing:2px;}
+.config-error{position:fixed;inset:0;background:var(--dark);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center;z-index:999;}
+.config-error h2{font-family:'Cinzel',serif;font-size:22px;color:var(--red);}
+.config-error p{font-size:14px;color:var(--text-muted);font-weight:600;line-height:1.75;max-width:500px;}
+.config-error code{background:var(--dark3);padding:2px 8px;border-radius:6px;font-family:var(--font-mono,monospace);color:var(--gold);font-size:13px;}
+@media(max-width:580px){.td-summary{grid-template-columns:repeat(2,1fr);}.s-detail-grid{grid-template-columns:1fr;}}
+.title-desc{font-size:14px;color:var(--text-muted);font-weight:600;max-width:420px;line-height:1.8;text-align:center;}
+.title-monsters{font-size:36px;letter-spacing:14px;opacity:.55;animation:float 4s ease-in-out infinite;}
+.name-box{display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:360px;}
+.name-lbl{font-size:12px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:2px;}
+.name-inp{width:100%;padding:14px 20px;background:var(--dark3);border:2px solid rgba(245,197,66,.3);border-radius:12px;color:var(--text);font-size:18px;font-family:'Nunito',sans-serif;font-weight:700;text-align:center;outline:none;transition:border-color .2s;}
+.name-inp:focus{border-color:var(--gold);}
+.name-inp::placeholder{color:var(--text-muted);}
+
+/* ===========================
+   MAP SCREEN
+=========================== */
+#screen-map{gap:1.1rem;}
+.topbar{display:flex;align-items:center;justify-content:space-between;background:var(--dark2);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:12px 18px;gap:12px;flex-wrap:wrap;}
+.player-info{display:flex;align-items:center;gap:12px;}
+.p-avatar{width:46px;height:46px;border-radius:50%;background:var(--dark3);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.p-name{font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--gold);}
+.p-title{font-size:11px;color:var(--text-muted);font-weight:700;margin-top:1px;}
+.stats-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.stat-hp-row{display:flex;align-items:center;gap:5px;}
+.stat-lbl{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+.hp-hearts{display:flex;gap:2px;font-size:14px;}
+.xp-block{display:flex;flex-direction:column;gap:3px;min-width:130px;}
+.xp-nums{display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--text-muted);}
+.xp-track{height:6px;background:rgba(255,255,255,.1);border-radius:999px;}
+.xp-fill{height:6px;background:linear-gradient(90deg,#f5c542,#ff9a00);border-radius:999px;transition:width .6s ease;}
+.gold-stat{font-size:15px;font-weight:800;color:var(--gold);}
+.map-heading{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--text-muted);text-align:center;letter-spacing:4px;text-transform:uppercase;}
+.dungeon-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;flex:1;}
+.d-card{background:var(--dark2);border:1.5px solid rgba(255,255,255,.07);border-radius:20px;padding:1.2rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:9px;}
+.d-card::after{content:'';position:absolute;inset:0;background:var(--dc,#fff);opacity:.04;pointer-events:none;transition:opacity .25s;}
+.d-card:hover{transform:translateY(-4px);border-color:var(--dc,#fff);box-shadow:0 10px 36px color-mix(in srgb,var(--dc,#fff) 22%,transparent);}
+.d-card:hover::after{opacity:.09;}
+.dc-top{display:flex;align-items:center;gap:10px;}
+.dc-icon{font-size:30px;line-height:1;filter:drop-shadow(0 0 8px var(--dc,rgba(255,255,255,.3)));}
+.dc-title{font-family:'Cinzel',serif;font-size:13px;font-weight:700;color:var(--dc,var(--gold));}
+.dc-std{font-size:9px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px;margin-top:2px;}
+.dc-desc{font-size:11px;color:var(--text-muted);font-weight:600;line-height:1.65;}
+.dc-monsters{font-size:20px;letter-spacing:6px;opacity:.45;}
+.dc-footer{display:flex;align-items:center;justify-content:space-between;}
+.dc-stars{font-size:13px;letter-spacing:2px;}
+.dc-enter{font-size:11px;font-weight:800;color:var(--dc,var(--gold));text-transform:uppercase;letter-spacing:1px;}
+
+/* ===========================
+   DUNGEON INTRO SCREEN
+=========================== */
+#screen-dungeon-intro{justify-content:center;align-items:center;}
+.di-card{background:var(--dark2);border:2px solid var(--dc,rgba(255,255,255,.2));border-radius:24px;padding:2rem 1.75rem;max-width:520px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.9rem;box-shadow:0 0 60px color-mix(in srgb,var(--dc,#fff) 14%,transparent);}
+.di-icon-big{font-size:70px;line-height:1;animation:float 3s ease-in-out infinite;filter:drop-shadow(0 0 20px var(--dc,rgba(255,255,255,.3)));}
+.di-title{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:var(--dc,var(--gold));}
+.di-std-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);border-radius:999px;padding:4px 14px;font-size:11px;font-weight:800;color:var(--blue);}
+.di-desc{font-size:13px;color:var(--text-muted);font-weight:600;line-height:1.75;max-width:380px;}
+.di-floors-row{display:flex;gap:8px;align-items:center;}
+.di-dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.18);transition:all .3s;}
+.di-dot.done{background:var(--green);border-color:var(--green);}
+.di-dot.boss{border-color:var(--gold);background:rgba(245,197,66,.2);}
+.di-dot.boss.done{background:var(--gold);}
+.di-btns{display:flex;gap:10px;width:100%;justify-content:center;margin-top:.5rem;}
+
+/* ===========================
+   BATTLE SCREEN
+=========================== */
+#screen-battle{padding:0;max-width:100%;}
+.b-header{background:var(--dark2);border-bottom:1px solid rgba(255,255,255,.07);padding:11px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.bh-left{display:flex;flex-direction:column;gap:1px;}
+.bh-floor{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.2px;}
+.bh-dungeon{font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:var(--dc,var(--gold));}
+.bh-retreat{font-size:12px;font-weight:700;color:var(--text-muted);background:none;border:1px solid rgba(255,255,255,.13);border-radius:8px;padding:5px 12px;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;}
+.bh-retreat:hover{border-color:var(--red);color:var(--red);}
+
+.b-body{flex:1;padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1.1rem;max-width:760px;width:100%;margin:0 auto;}
+
+/* Monster */
+.monster-zone{text-align:center;display:flex;flex-direction:column;align-items:center;gap:7px;}
+.m-emoji{font-size:78px;line-height:1;filter:drop-shadow(0 0 22px var(--dc,rgba(255,255,255,.25)));transition:transform .1s;}
+.m-emoji.hit{animation:mhit .3s ease;}
+.m-emoji.shake{animation:mshake .4s ease;}
+.m-name{font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--text);}
+.m-flavor{font-size:12px;color:var(--text-muted);font-weight:600;font-style:italic;max-width:360px;}
+.m-hp-row{display:flex;align-items:center;gap:6px;}
+.m-hp-lbl{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+.m-hearts{display:flex;gap:4px;font-size:19px;}
+
+/* Question */
+.q-zone{background:var(--dark2);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:11px;}
+.q-meta{display:flex;align-items:center;justify-content:space-between;}
+.q-num{font-size:10px;font-weight:800;color:var(--dc,var(--text-muted));text-transform:uppercase;letter-spacing:1px;}
+.q-std{font-size:9px;font-weight:800;color:var(--text-muted);background:rgba(255,255,255,.06);padding:2px 8px;border-radius:999px;}
+.q-text{font-size:16px;font-weight:700;color:var(--text);line-height:1.65;}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.c-btn{padding:11px 13px;background:var(--dark3);border:2px solid rgba(255,255,255,.1);border-radius:12px;color:var(--text);font-size:13px;font-weight:700;font-family:'Nunito',sans-serif;cursor:pointer;transition:all .15s;text-align:left;line-height:1.45;display:flex;align-items:flex-start;gap:7px;}
+.c-btn .c-label{min-width:16px;font-size:12px;font-weight:900;opacity:.6;}
+.c-btn:hover:not(:disabled){border-color:var(--dc,var(--gold));background:rgba(255,255,255,.04);transform:translateX(2px);}
+.c-btn.correct{background:rgba(46,204,113,.15);border-color:var(--green);color:#a8ffc8;}
+.c-btn.wrong{background:rgba(255,71,87,.15);border-color:var(--red);color:#ffb3bb;}
+.c-btn:disabled{cursor:default;}
+.b-feedback{padding:11px 14px;border-radius:12px;font-size:13px;font-weight:700;display:none;line-height:1.65;}
+.b-feedback.show{display:block;animation:fadeIn .3s ease;}
+.b-feedback.ok{background:rgba(46,204,113,.1);border:1.5px solid rgba(46,204,113,.3);color:#a8ffc8;}
+.b-feedback.bad{background:rgba(255,193,7,.1);border:1.5px solid rgba(255,193,7,.3);color:#ffe082;}
+.next-wrap{display:flex;justify-content:flex-end;}
+
+/* HUD */
+.b-hud{background:var(--dark2);border-top:1px solid rgba(255,255,255,.07);padding:11px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;}
+.hud-sect{display:flex;align-items:center;gap:7px;}
+.hud-lbl{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+.hud-hearts{display:flex;gap:3px;font-size:15px;}
+.hud-xp{font-size:15px;font-weight:800;color:var(--gold);}
+
+/* ===========================
+   FLOOR COMPLETE SCREEN
+=========================== */
+#screen-floor-complete{justify-content:center;align-items:center;}
+.fc-card{background:var(--dark2);border:2px solid rgba(46,204,113,.3);border-radius:24px;padding:2rem 1.75rem;max-width:420px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.9rem;}
+.fc-icon{font-size:58px;animation:bounceIn .5s ease;}
+.fc-title{font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--green);}
+.fc-sub{font-size:13px;color:var(--text-muted);font-weight:600;line-height:1.6;}
+.xp-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(245,197,66,.1);border:1.5px solid rgba(245,197,66,.3);border-radius:999px;padding:8px 20px;font-size:16px;font-weight:800;color:var(--gold);}
+
+/* ===========================
+   VICTORY SCREEN
+=========================== */
+#screen-victory{justify-content:center;align-items:center;}
+.vic-card{background:var(--dark2);border:2px solid rgba(245,197,66,.35);border-radius:24px;padding:2rem 1.75rem;max-width:480px;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center;gap:.9rem;box-shadow:0 0 70px rgba(245,197,66,.12);}
+.vic-title{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:var(--gold);text-shadow:0 0 20px rgba(245,197,66,.5);}
+.star-display{font-size:34px;letter-spacing:8px;}
+.vic-desc{font-size:14px;color:var(--text-muted);font-weight:600;}
+.rewards{display:grid;grid-template-columns:1fr 1fr;gap:9px;width:100%;}
+.r-card{background:var(--dark3);border-radius:12px;padding:12px;text-align:center;}
+.r-val{font-size:22px;font-weight:900;color:var(--gold);}
+.r-lbl{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+/* ===========================
+   LEVEL UP OVERLAY
+=========================== */
+#overlay-levelup{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;justify-content:center;align-items:center;flex-direction:column;gap:.9rem;}
+#overlay-levelup.show{display:flex;animation:fadeIn .4s ease;}
+.lu-title{font-family:'Cinzel',serif;font-size:32px;font-weight:900;color:var(--gold);animation:levelPulse 1.2s ease-in-out infinite;letter-spacing:3px;}
+.lu-num{font-size:80px;font-weight:900;color:var(--gold);line-height:1;}
+.lu-new-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--text);}
+.lu-sub{font-size:13px;color:var(--text-muted);font-weight:600;}
+
+/* ===========================
+   FLOATING TEXT
+=========================== */
+.float-txt{position:fixed;font-size:19px;font-weight:900;pointer-events:none;z-index:300;animation:floatUp 1.3s ease forwards;text-shadow:0 2px 8px rgba(0,0,0,.5);}
+
+/* ===========================
+   SCROLLBAR
+=========================== */
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:var(--dark);}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px;}
+
+/* ===========================
+   RESPONSIVE
+=========================== */
+@media(max-width:580px){
+  .dungeon-grid{grid-template-columns:1fr;}
+  .choices{grid-template-columns:1fr;}
+  .title-logo{font-size:40px;}
+  .rewards{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================================
+     TITLE SCREEN
+================================= -->
+<div id="screen-title" class="screen active">
+  <div class="title-eyebrow">AFDA Review</div>
+  <div class="title-logo">AFDA<br>QUEST</div>
+  <div class="title-sub">A Mathematical Adventure</div>
+  <div class="badge">⚖️ Post-Test Review Activity</div>
+  <div class="title-monsters">🐍 🏰 🏔️ 💎</div>
+  <p class="title-desc">
+    Battle monsters, earn XP, and master Linear Functions, Systems of Equations,
+    Polynomial Factoring, and Quadratic Functions across four epic dungeons!
+  </p>
+  <div class="name-box">
+    <div class="name-lbl">Enter Your Hero's Name</div>
+    <input class="name-inp" id="name-input" type="text" placeholder="Your name..." maxlength="20" />
+    <button class="btn btn-gold" onclick="startGame()" style="width:100%;font-size:16px;">⚔️ Begin Adventure</button>
+  </div>
+  <div class="title-footer">
+    <button class="teacher-link" onclick="openTeacherLogin()">👩‍🏫 Teacher Dashboard</button>
+  </div>
+</div>
+
+<!-- ① RETURNING STUDENT LOGIN MODAL -->
+<div class="modal-overlay" id="modal-save">
+  <div class="modal-card">
+    <div class="modal-title">⚔️ Welcome Back!</div>
+    <p class="modal-sub">Enter your password to access your adventure.</p>
+    <div class="save-info-card" id="save-info-preview"></div>
+    <input class="pw-input" id="student-pw-input" type="password" placeholder="Your password..." maxlength="30" style="margin-top:.25rem;" />
+    <div class="pw-error" id="student-pw-error">❌ Wrong password. Try again!</div>
+    <div class="modal-btns">
+      <button class="btn btn-gold" onclick="checkStudentPw()">▶ Continue Adventure</button>
+      <button class="btn btn-ghost" onclick="closeSaveModal()" style="font-size:13px;padding:10px;">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ② NEW STUDENT — CREATE PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-create-pw">
+  <div class="modal-card">
+    <div class="modal-title">🔐 Create Your Password</div>
+    <p class="modal-sub">Choose a password to protect your adventure. You will need it every time you log in — don't forget it!</p>
+    <input class="pw-input" id="new-pw1" type="password" placeholder="Choose a password..." maxlength="30" />
+    <input class="pw-input" id="new-pw2" type="password" placeholder="Confirm password..." maxlength="30" style="margin-top:.5rem;" />
+    <div class="pw-error" id="new-pw-error">❌ Passwords do not match. Try again.</div>
+    <div class="modal-btns" style="margin-top:.25rem;">
+      <button class="btn btn-gold" onclick="createPassword()">⚔️ Begin Adventure</button>
+      <button class="btn btn-ghost" onclick="closeCreatePw()" style="font-size:13px;padding:10px;">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ③ TEACHER PASSWORD MODAL -->
+<div class="modal-overlay" id="modal-teacher-pw">
+  <div class="modal-card">
+    <div class="modal-title">👩‍🏫 Teacher Access</div>
+    <p class="modal-sub">Enter the teacher password to access the dashboard.<br>Default password: <strong style="color:var(--gold);">AFDA2025</strong></p>
+    <input class="pw-input" id="pw-input" type="password" placeholder="••••••••" maxlength="20" />
+    <div class="pw-error" id="pw-error">❌ Incorrect password. Try again.</div>
+    <div class="modal-btns">
+      <button class="btn btn-gold" onclick="checkTeacherPw()">🔓 Enter Dashboard</button>
+      <button class="btn btn-ghost" onclick="closeTeacherPw()" style="font-size:13px;padding:10px;">✕ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE INDICATOR -->
+<div class="save-indicator" id="save-indicator">💾 Progress Saved!</div>
+
+<!-- MODE BANNER -->
+<div class="mode-banner" id="mode-banner"></div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="lo-icon">⚔️</div>
+  <div class="lo-text" id="loading-text">Loading...</div>
+</div>
+
+<!-- ================================
+     WORLD MAP
+================================= -->
+<div id="screen-map" class="screen">
+  <div class="topbar">
+    <div class="player-info">
+      <div class="p-avatar">🤴</div>
+      <div>
+        <div class="p-name" id="map-name">Hero</div>
+        <div class="p-title" id="map-title-text">Apprentice</div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-hp-row">
+        <div class="stat-lbl">HP</div>
+        <div class="hp-hearts" id="map-hp"></div>
+      </div>
+      <div class="xp-block">
+        <div class="xp-nums">
+          <span id="map-lvl-lbl">Lv. 1</span>
+          <span id="map-xp-lbl">0 / 100 XP</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="map-xp-bar" style="width:0%"></div></div>
+      </div>
+      <div class="gold-stat">💰 <span id="map-gold">0</span></div>
+    </div>
+  </div>
+
+  <!-- Resume in-progress run banner -->
+  <div class="resume-banner" id="resume-banner">
+    <div class="rb-left">
+      <div class="rb-icon" id="rb-icon">⚔️</div>
+      <div>
+        <div class="rb-text" id="rb-text">Adventure in progress!</div>
+        <div class="rb-sub" id="rb-sub">Pick up where you left off</div>
+      </div>
+    </div>
+    <div class="rb-btns">
+      <button class="rb-btn gold" onclick="resumeRun()">▶ Resume</button>
+      <button class="rb-btn ghost" onclick="abandonRun()">✕ Abandon</button>
+    </div>
+  </div>
+
+  <div class="map-heading">⚔️ Choose Your Dungeon ⚔️</div>
+  <div class="dungeon-grid" id="dungeon-grid"></div>
+</div>
+
+<!-- ================================
+     DUNGEON INTRO
+================================= -->
+<div id="screen-dungeon-intro" class="screen">
+  <div class="di-card" id="di-card">
+    <div class="di-icon-big" id="di-icon">📈</div>
+    <div class="di-title" id="di-name">Linear Lair</div>
+    <div class="di-std-badge" id="di-std">⚖️ AFDA.1</div>
+    <p class="di-desc" id="di-desc">Description</p>
+    <div class="di-floors-row" id="di-dots"></div>
+    <div class="di-btns">
+      <button class="btn btn-ghost" onclick="goToMap()">← Back to Map</button>
+      <button class="btn btn-gold" onclick="enterDungeon()">⚔️ Enter Dungeon</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================================
+     BATTLE SCREEN
+================================= -->
+<div id="screen-battle" class="screen" style="padding:0;max-width:100%;">
+  <div class="b-header">
+    <div class="bh-left">
+      <div class="bh-floor" id="bh-floor">Floor 1 of 4</div>
+      <div class="bh-dungeon" id="bh-dungeon">Linear Lair</div>
+    </div>
+    <button class="bh-retreat" onclick="retreatToCamp()">🏃 Retreat to Map</button>
+  </div>
+
+  <div class="b-body">
+    <div class="monster-zone">
+      <div class="m-emoji" id="m-emoji">🐍</div>
+      <div class="m-name" id="m-name">Slope Serpent</div>
+      <div class="m-flavor" id="m-flavor">A slithering beast!</div>
+      <div class="m-hp-row">
+        <div class="m-hp-lbl">HP</div>
+        <div class="m-hearts" id="m-hearts"></div>
+      </div>
+    </div>
+
+    <div class="q-zone">
+      <div class="q-meta">
+        <div class="q-num" id="q-num">Question 1 of 3</div>
+        <div class="q-std" id="q-std">AFDA.1</div>
+      </div>
+      <div class="q-text" id="q-text"></div>
+      <div class="choices" id="choices"></div>
+      <div class="b-feedback" id="b-feedback"></div>
+      <div class="next-wrap" id="next-wrap" style="display:none;">
+        <button class="btn btn-gold" onclick="nextQuestion()" style="padding:10px 24px;font-size:14px;">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="b-hud">
+    <div class="hud-sect">
+      <div class="hud-lbl">Your HP</div>
+      <div class="hud-hearts" id="hud-hearts"></div>
+    </div>
+    <div class="hud-sect">
+      <div class="hud-lbl">XP This Run</div>
+      <div class="hud-xp" id="hud-xp">+0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================
+     FLOOR COMPLETE
+================================= -->
+<div id="screen-floor-complete" class="screen">
+  <div class="fc-card">
+    <div class="fc-icon" id="fc-icon">⚔️</div>
+    <div class="fc-title" id="fc-title">Monster Defeated!</div>
+    <p class="fc-sub" id="fc-sub">You answered and slayed the beast!</p>
+    <div class="xp-badge" id="fc-xp">+30 XP</div>
+    <button class="btn btn-gold" id="fc-btn" onclick="continueFloor()">Next Floor →</button>
+    <button class="btn btn-ghost" onclick="goToMap()" style="font-size:13px;padding:9px 18px;">Return to Map</button>
+  </div>
+</div>
+
+<!-- ================================
+     VICTORY SCREEN
+================================= -->
+<div id="screen-victory" class="screen">
+  <div class="vic-card">
+    <div style="font-size:62px;">🏆</div>
+    <div class="vic-title" id="vic-title">Dungeon Cleared!</div>
+    <div class="star-display" id="vic-stars">⭐⭐⭐</div>
+    <p class="vic-desc" id="vic-desc">You conquered the dungeon!</p>
+    <div class="rewards">
+      <div class="r-card"><div class="r-val" id="vic-xp">0</div><div class="r-lbl">XP Earned</div></div>
+      <div class="r-card"><div class="r-val" id="vic-gold">0</div><div class="r-lbl">Gold Earned</div></div>
+      <div class="r-card"><div class="r-val" id="vic-correct">0/0</div><div class="r-lbl">Correct Answers</div></div>
+      <div class="r-card"><div class="r-val" id="vic-acc">0%</div><div class="r-lbl">Accuracy</div></div>
+    </div>
+    <button class="btn btn-gold" onclick="goToMap()" style="width:100%;margin-top:.5rem;">🗺️ Return to Map</button>
+  </div>
+</div>
+
+<!-- ================================
+     LEVEL UP OVERLAY
+================================= -->
+<div id="overlay-levelup">
+  <div class="lu-title">⚔️ LEVEL UP! ⚔️</div>
+  <div class="lu-num" id="lu-num">2</div>
+  <div class="lu-new-title" id="lu-new-title">Wanderer</div>
+  <div class="lu-sub">Your power grows stronger!</div>
+  <button class="btn btn-gold" onclick="closeLevelUp()" style="margin-top:.75rem;">Continue Adventure ⚔️</button>
+</div>
+
+<!-- ================================
+     TEACHER DASHBOARD
+================================= -->
+<div id="screen-teacher" class="screen">
+  <div class="td-header">
+    <div class="td-title">👩‍🏫 Teacher Dashboard</div>
+    <div class="td-actions">
+      <button class="td-btn green" onclick="exportCSV()">📥 Export CSV</button>
+      <button class="td-btn red" onclick="clearAllData()">🗑️ Clear All Data</button>
+      <button class="td-btn" onclick="show('screen-title')">✕ Exit</button>
+    </div>
+  </div>
+  <div class="td-summary" id="td-summary"></div>
+  <div class="td-section-title">Student Progress</div>
+  <div class="student-list" id="student-list"></div>
+</div>
+
+<script>
+// =====================================================================
+// GAME DATA
+// Add new dungeons by appending to GAME_DATA.dungeons
+// Each dungeon needs: id, name, icon, color, standard, description,
+//   monsters_preview, and floors[]
+// Each floor needs: monster{name,emoji,flavor} and questions[]
+// Each question needs: text, options[], answer (index), hint, standard
+// =====================================================================
+
+const GAME_DATA = { dungeons: [
+
+  // ----------------------------------------------------------------
+  // DUNGEON 1 — LINEAR LAIR (AFDA.1)
+  // ----------------------------------------------------------------
+  { id:'linear', name:'Linear Lair', icon:'📈', color:'#4fc3f7', standard:'AFDA.1',
+    description:'Explore the cave of Linear Functions! Master slope, intercepts, and rate of change to defeat the monsters lurking within.',
+    monsters_preview:'🐍 👻 ⚡ 👑',
+    floors:[
+      { monster:{ name:'Slope Serpent', emoji:'🐍', flavor:'A slithering beast that twists at every angle!' },
+        questions:[
+          { text:'What is the slope of the line passing through (2, 4) and (6, 12)?',
+            options:['1','2','3','4'], answer:1, standard:'AFDA.1',
+            hint:'📐 slope = (y₂ − y₁) ÷ (x₂ − x₁) = (12−4)÷(6−2) = 8÷4 = 2' },
+          { text:'What is the slope of the line y = −5x + 3?',
+            options:['3','−3','5','−5'], answer:3, standard:'AFDA.1',
+            hint:'📐 In y = mx + b, the coefficient of x is the slope. Here m = −5.' },
+          { text:'A line passes through (0, 0) and (3, 9). What is the slope?',
+            options:['0.33','1','3','9'], answer:2, standard:'AFDA.1',
+            hint:'📐 slope = rise÷run = 9÷3 = 3' }
+        ]
+      },
+      { monster:{ name:'Intercept Imp', emoji:'👻', flavor:'A mischievous ghost haunting the axes!' },
+        questions:[
+          { text:'What is the y-intercept of y = 3x − 7?',
+            options:['3','7','−7','−3'], answer:2, standard:'AFDA.1',
+            hint:'📍 In y = mx + b, the value b is the y-intercept. Here b = −7.' },
+          { text:'What is the x-intercept of the line y = 2x − 8?',
+            options:['−8','−4','4','8'], answer:2, standard:'AFDA.1',
+            hint:'📍 Set y = 0: 0 = 2x − 8 → 2x = 8 → x = 4' },
+          { text:'Which equation has a y-intercept of 6?',
+            options:['y = 6x','y = x + 6','y = 6x − 1','y = x − 6'], answer:1, standard:'AFDA.1',
+            hint:'📍 The y-intercept is b in y = mx + b. Only y = x + 6 has b = 6.' }
+        ]
+      },
+      { monster:{ name:'Rate Wraith', emoji:'⚡', flavor:'A crackling spirit of change and motion!' },
+        questions:[
+          { text:'If f(x) = 6x + 8, what is f(-2)?',
+            options:['3','-4','6','4'], answer:1, standard:'AFDA.1',
+            hint:'⚡ Substitute x = −2: f(−2) = 6(−2) + 8 = −12 + 8 = −4.' },
+          { text:'If f(x) = 4x − 3, what is f(5)?',
+            options:['17','20','23','7'], answer:0, standard:'AFDA.1',
+            hint:'⚡ Substitute x = 5: f(5) = 4(5) − 3 = 20 − 3 = 17' },
+          { text:'What does a NEGATIVE slope indicate about a linear function?',
+            options:['Line rises left to right','Line is horizontal','Line falls left to right','Line is vertical'], answer:2, standard:'AFDA.1',
+            hint:'⚡ Negative slope means as x increases, y decreases — the line falls from left to right.' }
+        ]
+      },
+      { isBoss:true, monster:{ name:'Linear Overlord', emoji:'👑', flavor:'The supreme ruler of all linear equations. Prove your mastery to defeat it!' },
+        questions:[
+          { text:'Which is the slope-intercept form of a linear equation?',
+            options:['ax + by = c','y = mx + b','y − y₁ = m(x − x₁)','y/x = m'], answer:1, standard:'AFDA.1',
+            hint:'👑 Slope-intercept form is y = mx + b, where m = slope and b = y-intercept.' },
+          { text:'Rewrite in slope-intercept form: 4x − 2y = 8',
+            options:['y = 2x − 4','y = −2x + 4','y = 4x − 8','y = 2x + 4'], answer:0, standard:'AFDA.1',
+            hint:'👑 Solve for y: −2y = −4x + 8 → divide by −2 → y = 2x − 4' },
+          { text:'Two parallel lines must have:',
+            options:['Opposite slopes','Reciprocal slopes','Equal slopes','Product of slopes = −1'], answer:2, standard:'AFDA.1',
+            hint:'👑 Parallel lines never intersect and always have the same slope.' },
+          { text:'What is the slope of a vertical line?',
+            options:['0','1','−1','Undefined'], answer:3, standard:'AFDA.1',
+            hint:'👑 Vertical line has form x = a. slope = rise ÷ 0 → undefined (cannot divide by zero).' }
+        ]
+      }
+    ]
+  },
+
+  // ----------------------------------------------------------------
+  // DUNGEON 2 — SYSTEMS STRONGHOLD (AFDA.4)
+  // ----------------------------------------------------------------
+  { id:'systems', name:'Systems Stronghold', icon:'🏰', color:'#ce93d8', standard:'AFDA.4',
+    description:'Storm the fortress of Systems of Equations! Use substitution and elimination to solve simultaneous equations and conquer the guardians within!',
+    monsters_preview:'🧛 🧟 🧙 🔮',
+    floors:[
+      { monster:{ name:'Variable Vampire', emoji:'🧛', flavor:'This creature feasts on unsolved variables!' },
+        questions:[
+          { text:'What is the solution to: y = x + 2 and y = 3x − 4?',
+            options:['(2, 4)','(3, 5)','(1, 3)','(4, 6)'], answer:1, standard:'AFDA.4',
+            hint:'🧛 Set equal: x + 2 = 3x − 4 → −2x = −6 → x = 3, then y = 3 + 2 = 5.' },
+          { text:'How many solutions does the system y = 2x + 1 and y = 2x − 3 have?',
+            options:['None (0)','One (1)','Two (2)','Infinitely many'], answer:0, standard:'AFDA.4',
+            hint:'🧛 Same slope but different y-intercepts means parallel lines — they never intersect!' },
+          { text:'Does the ordered pair (2, 5) satisfy BOTH y = 2x + 1 AND y = x + 3?',
+            options:['Yes, both equations','Only the first','Only the second','Neither equation'], answer:0, standard:'AFDA.4',
+            hint:'🧛 Check each: 2(2)+1 = 5 ✓ and 2+3 = 5 ✓. The point satisfies both!' }
+        ]
+      },
+      { monster:{ name:'Substitution Zombie', emoji:'🧟', flavor:'It shuffles forward, replacing every variable it finds!' },
+        questions:[
+          { text:'Solve by substitution: y = 3x and x + y = 8. What is x?',
+            options:['1','2','3','4'], answer:1, standard:'AFDA.4',
+            hint:'🧟 Substitute y = 3x: x + 3x = 8 → 4x = 8 → x = 2' },
+          { text:'Solve by substitution: y = x − 1 and 2x + y = 11. What is y?',
+            options:['3','4','5','6'], answer:0, standard:'AFDA.4',
+            hint:'🧟 Sub y = x−1: 2x + (x−1) = 11 → 3x = 12 → x = 4 → y = 4−1 = 3' },
+          { text:'Which system has INFINITELY MANY solutions?',
+            options:['y = x+1 and y = x−1','y = 2x and y = 3x','y = x and y = −x','y = 3x+2 and 6x−2y = −4'], answer:3, standard:'AFDA.4',
+            hint:'🧟 Simplify 6x−2y = −4 → y = 3x+2. Same equation = same line = infinite solutions!' }
+        ]
+      },
+      { monster:{ name:'Elimination Mage', emoji:'🧙', flavor:'This sorcerer banishes variables from existence with arcane addition!' },
+        questions:[
+          { text:'Add the equations to eliminate y: 3x + y = 10 and x − y = 2. What is x?',
+            options:['2','3','4','5'], answer:1, standard:'AFDA.4',
+            hint:'🧙 Add both sides: 4x = 12 → x = 3' },
+          { text:'Use elimination: 2x + 3y = 12 and 2x − y = 4. What is y?',
+            options:['1','2','3','4'], answer:1, standard:'AFDA.4',
+            hint:'🧙 Subtract the 2nd from 1st: 4y = 8 → y = 2' },
+          { text:'When is elimination the most efficient method?',
+            options:['When one variable is already isolated','When both equations are in standard form with matching/opposite coefficients','When there are three variables','When you want to graph the system'], answer:1, standard:'AFDA.4',
+            hint:'🧙 Elimination shines when adding or subtracting the equations cancels out one variable immediately.' }
+        ]
+      },
+      { isBoss:true, monster:{ name:'Systems Sorcerer', emoji:'🔮', flavor:'The ultimate master of simultaneous equations! Its power spans all methods!' },
+        questions:[
+          { text:'Apples cost $1 each, oranges cost $2 each. You buy 10 fruit for $15. How many apples?',
+            options:['3','4','5','6'], answer:2, standard:'AFDA.4',
+            hint:'🔮 System: a + o = 10 and a + 2o = 15. Subtract: o = 5, so a = 10 − 5 = 5.' },
+          { text:'The solution to a system is (0, 4). Which system could produce this?',
+            options:['y = x+4 and y = −x+4','y = x and y = 4x','y = 2x+4 and y = x','y = x+4 and y = x−4'], answer:0, standard:'AFDA.4',
+            hint:'🔮 Plug (0,4) into y = x+4: 4 = 0+4 ✓. Into y = −x+4: 4 = 0+4 ✓. Only option A works.' },
+          { text:'A system with NO solution has lines that are:',
+            options:['Intersecting at one point','The same line','Perpendicular to each other','Parallel (same slope, different intercepts)'], answer:3, standard:'AFDA.4',
+            hint:'🔮 No solution = no intersection point = parallel lines with equal slopes but different y-intercepts.' },
+          { text:'Solve by any method: x + 2y = 7 and 3x − 2y = 5. What is x?',
+            options:['1','2','3','4'], answer:2, standard:'AFDA.4',
+            hint:'🔮 Add equations: 4x = 12 → x = 3. Then: 3 + 2y = 7 → y = 2.' }
+        ]
+      }
+    ]
+  },
+
+  // ----------------------------------------------------------------
+  // DUNGEON 3 — POLYNOMIAL PEAKS (Factoring)
+  // ----------------------------------------------------------------
+  { id:'polynomials', name:'Polynomial Peaks', icon:'🏔️', color:'#a5d6a7', standard:'AFDA — Factoring',
+    description:'Scale the treacherous Polynomial Peaks! Factor expressions using GCF, FOIL, and trinomial patterns to defeat the algebra monsters!',
+    monsters_preview:'👺 🦇 🐲 🐉',
+    floors:[
+      { monster:{ name:'GCF Goblin', emoji:'👺', flavor:'This greedy goblin hoards every common factor it finds!' },
+        questions:[
+          { text:'What is the GCF of 12x³ + 8x²?',
+            options:['4x','4x²','8x','12x²'], answer:1, standard:'Factoring',
+            hint:'👺 GCF of coefficients: GCF(12,8) = 4. GCF of variables: GCF(x³,x²) = x². So GCF = 4x².' },
+          { text:'Factor out the GCF from 15y³ − 10y:',
+            options:['5y(3y² − 2)','5(3y³ − 2y)','y(15y² − 10)','10y(y² − 1)'], answer:0, standard:'Factoring',
+            hint:'👺 GCF = 5y. Divide each term: 15y³ ÷ 5y = 3y² and 10y ÷ 5y = 2. Answer: 5y(3y²−2).' },
+          { text:'Which shows the CORRECT GCF factoring of 6x² + 9x?',
+            options:['3(2x² + 3x)','3x(2x + 3)','6x(x + 1)','9x(x + 1)'], answer:1, standard:'Factoring',
+            hint:'👺 GCF = 3x (not just 3, because x is common too). Then: 6x²÷3x = 2x and 9x÷3x = 3.' }
+        ]
+      },
+      { monster:{ name:'Binomial Bat', emoji:'🦇', flavor:'Two sharp wings — one for each term! It swoops with FOIL fury!' },
+        questions:[
+          { text:'Use FOIL to expand: (x + 3)(x + 5)',
+            options:['x² + 8x + 15','x² + 15x + 8','x² + 15','x² + 8x + 8'], answer:0, standard:'Factoring',
+            hint:'🦇 FOIL: First = x², Outer = 5x, Inner = 3x, Last = 15. Combine: x² + 8x + 15.' },
+          { text:'Expand: (x − 4)(x + 4)',
+            options:['x² − 8','x² + 16','x² − 16','x² − 8x − 16'], answer:2, standard:'Factoring',
+            hint:'🦇 Difference of Squares pattern: (a−b)(a+b) = a² − b². Here: x² − 16.' },
+          { text:'Expand: (2x + 1)(x − 3)',
+            options:['2x² − 5x − 3','2x² − 6x − 3','2x² + 5x − 3','2x² − 7x − 3'], answer:0, standard:'Factoring',
+            hint:'🦇 FOIL: 2x·x = 2x², 2x·(−3) = −6x, 1·x = x, 1·(−3) = −3. Combine: 2x² − 5x − 3.' }
+        ]
+      },
+      { monster:{ name:'Trinomial Dragon', emoji:'🐲', flavor:'Three heads, three terms — each fiercer than the last!' },
+        questions:[
+          { text:'Factor: x² + 7x + 12',
+            options:['(x+3)(x+4)','(x+2)(x+6)','(x+1)(x+12)','(x+4)(x+4)'], answer:0, standard:'Factoring',
+            hint:'🐲 Find two numbers: m × n = 12 AND m + n = 7. That is 3 and 4. So (x+3)(x+4).' },
+          { text:'Factor: x² − 5x + 6',
+            options:['(x−1)(x−6)','(x−2)(x−3)','(x+2)(x−3)','(x−2)(x+3)'], answer:1, standard:'Factoring',
+            hint:'🐲 Find m×n = 6 AND m+n = −5. That is −2 and −3. So (x−2)(x−3).' },
+          { text:'Factor: x² − 9',
+            options:['(x−3)²','(x+3)(x−3)','(x−9)(x+1)','(x+9)(x−1)'], answer:1, standard:'Factoring',
+            hint:'🐲 x²−9 = x²−3². This is a Difference of Squares! (a²−b²) = (a+b)(a−b) → (x+3)(x−3).' }
+        ]
+      },
+      { isBoss:true, monster:{ name:'Polynomial Hydra', emoji:'🐉', flavor:'Every head you cut grows back doubled — factor COMPLETELY or face eternal defeat!' },
+        questions:[
+          { text:'Factor completely: 2x² + 8x + 6',
+            options:['(2x+2)(x+3)','2(x+1)(x+3)','2(x+2)(x+3)','(2x+6)(x+1)'], answer:1, standard:'Factoring',
+            hint:'🐉 Step 1 — GCF = 2: 2(x²+4x+3). Step 2 — Factor trinomial: 2(x+1)(x+3).' },
+          { text:'Factor completely: 3x² − 12',
+            options:['3(x²−4)','3(x−2)(x+2)','3(x−2)²','(3x−6)(x+2)'], answer:1, standard:'Factoring',
+            hint:'🐉 GCF = 3 → 3(x²−4). Then difference of squares → 3(x−2)(x+2). Always factor fully!' },
+          { text:'Factor completely: x³ − 4x',
+            options:['x(x²−4)','x(x−2)(x+2)','x(x−4)','(x²−2)(x+2)'], answer:1, standard:'Factoring',
+            hint:'🐉 GCF = x: x(x²−4). Then diff of squares: x(x−2)(x+2). Check x(x²−4) is NOT complete!' },
+          { text:'Factor: 2x² + 5x − 3',
+            options:['(2x−1)(x+3)','(2x+1)(x−3)','(x+3)(2x−1)','(2x+3)(x−1)'], answer:0, standard:'Factoring',
+            hint:'🐉 a·c = 2·(−3) = −6. Need m×n = −6 and m+n = 5: try 6 and −1. Rewrite then factor by grouping: (2x−1)(x+3).' }
+        ]
+      }
+    ]
+  },
+
+  // ----------------------------------------------------------------
+  // DUNGEON 4 — QUADRATIC QUARRY (AFDA.2)
+  // ----------------------------------------------------------------
+  { id:'quadratics', name:'Quadratic Quarry', icon:'💎', color:'#ffcc80', standard:'AFDA.2',
+    description:'Descend into the Quadratic Quarry! Uncover the secrets of parabolas, vertices, and the discriminant to defeat the creatures of the deep!',
+    monsters_preview:'🌊 🕷️ 💀 🦑',
+    floors:[
+      { monster:{ name:'Vertex Viper', emoji:'🌊', flavor:'It strikes from the turning point — find the vertex or be swept away!' },
+        questions:[
+          { text:'What is the vertex of y = x² + 4x + 3?',
+            options:['(−2, −1)','(2, 1)','(−2, 1)','(2, −1)'], answer:0, standard:'AFDA.2',
+            hint:'🌊 x = −b/2a = −4/2 = −2. Then y = (−2)²+4(−2)+3 = 4−8+3 = −1. Vertex: (−2, −1).' },
+          { text:'What is the vertex of y = (x + 1)² − 3?',
+            options:['(1, -3)','(-1, 3)','(-1, -3)','(1, 3)'], answer:2, standard:'AFDA.2',
+            hint:'🌊 Vertex form y = a(x−h)²+k gives vertex at (h, k). Here h = −1 and k = −3, so vertex = (−1, −3).' },
+          { text:'A parabola opens UPWARD. What must be true about a in y = ax²?',
+            options:['a < 0','a = 0','a > 0','a = 1'], answer:2, standard:'AFDA.2',
+            hint:'🌊 When a > 0, the parabola is like a cup ∪ opening up. When a < 0, it opens down ∩.' }
+        ]
+      },
+      { monster:{ name:'Parabola Phantom', emoji:'🕷️', flavor:'Eight eyes scanning every zero — it sees every x-intercept before you do!' },
+        questions:[
+          { text:'What are the x-intercepts (zeros) of y = x² − 4?',
+            options:['x = ±2','x = ±4','x = 2 only','x = 4 only'], answer:0, standard:'AFDA.2',
+            hint:'🕷️ Set y = 0: x² = 4 → x = ±2. Both +2 and −2 are zeros.' },
+          { text:'How many x-intercepts does y = x² + 4 have?',
+            options:['0 (none)','1','2','4'], answer:0, standard:'AFDA.2',
+            hint:'🕷️ Set y = 0: x² = −4. No real number squared equals −4. The parabola is entirely above the x-axis.' },
+          { text:'The axis of symmetry for y = 2x² − 8x + 5 is:',
+            options:['x = −2','x = 2','x = 4','x = −4'], answer:1, standard:'AFDA.2',
+            hint:'🕷️ Axis of symmetry: x = −b/2a = −(−8)/[2(2)] = 8/4 = 2.' }
+        ]
+      },
+      { monster:{ name:'Discriminant Demon', emoji:'💀', flavor:'It already knows how many solutions you have. Do you?' },
+        questions:[
+          { text:'If the discriminant (b² − 4ac) equals ZERO, the quadratic has:',
+            options:['Two different real solutions','Exactly one real solution','No real solutions','Infinitely many solutions'], answer:1, standard:'AFDA.2',
+            hint:'💀 Discriminant = 0 → one repeated (double) root → the parabola just touches the x-axis at one point.' },
+          { text:'For y = x² − 6x + 9, what is the discriminant?',
+            options:['0','36','−36','9'], answer:0, standard:'AFDA.2',
+            hint:'💀 b²−4ac = (−6)²−4(1)(9) = 36−36 = 0. This means one repeated zero.' },
+          { text:'Which quadratic has exactly TWO real x-intercepts?',
+            options:['y = x² + 4','y = x² + 2x + 1','y = x² − 5','y = x² + x + 5'], answer:2, standard:'AFDA.2',
+            hint:'💀 Need discriminant > 0. For y=x²−5: 0²−4(1)(−5) = 20 > 0 → two real zeros. ✓' }
+        ]
+      },
+      { isBoss:true, monster:{ name:'Quadratic Kraken', emoji:'🦑', flavor:'Its tentacles stretch across the entire coordinate plane. Only complete mastery of quadratics can stop it!' },
+        questions:[
+          { text:'Solve by factoring: x² + 2x − 15 = 0',
+            options:['x = 3 or x = −5','x = −3 or x = 5','x = 5 or x = 3','x = −5 or x = −3'], answer:0, standard:'AFDA.2',
+            hint:'🦑 Factor: need m×n = −15 and m+n = 2 → 5 and −3. So (x+5)(x−3) = 0 → x = −5 or x = 3.' },
+          { text:'Solve x² − 5x + 6 = 0 using any method:',
+            options:['x = 1 or x = 6','x = 2 or x = 3','x = −2 or x = −3','x = 2 or x = −3'], answer:1, standard:'AFDA.2',
+            hint:'🦑 Factor: (x−2)(x−3) = 0 → x = 2 or x = 3. Or use quadratic formula to verify.' },
+          { text:'A ball\'s height (feet) is h = −16t² + 64t. When does the ball hit the ground?',
+            options:['t = 2 sec','t = 4 sec','t = 8 sec','t = 16 sec'], answer:1, standard:'AFDA.2',
+            hint:'🦑 Set h = 0: −16t(t−4) = 0 → t = 0 (launch) or t = 4 (landing). It hits the ground at t = 4 sec.' },
+          { text:'What is the MAXIMUM value of y = −(x − 3)² + 7?',
+            options:['3','7','−7','9'], answer:1, standard:'AFDA.2',
+            hint:'🦑 Vertex form: vertex is at (3, 7). Since a = −1 < 0, the parabola opens down — the vertex IS the maximum. Max = 7.' }
+        ]
+      }
+    ]
+  }
+
+]}; // end GAME_DATA
+
+
+// =====================================================================
+// PLAYER TITLES (by level)
+// =====================================================================
+const TITLES = [
+  '','Apprentice','Wanderer','Knight',
+  'Mage','Wizard','Sage',
+  'Master','Lord','Champion','AFDA Legend'
+];
+
+// =====================================================================
+// GAME STATE
+// =====================================================================
+let G = {
+  player: { name:'Hero', level:1, xp:0, hp:5, maxHp:5, gold:0 },
+  dungeon: null,
+  floorIdx: 0,
+  qIdx: 0,
+  runXP: 0,
+  runCorrect: 0,
+  runTotal: 0,
+  mHp: 3,
+  mMaxHp: 3,
+  answered: false,
+  progress: {},
+  runs: []
+};
+
+function xpNeeded(lvl) { return lvl * 100; }
+function getTitle(lvl) { return TITLES[Math.min(lvl, TITLES.length-1)] || 'AFDA Legend'; }
+function getProgress(id) { return G.progress[id] || 0; }
+
+// =====================================================================
+// SUPABASE CONFIG
+// ─────────────────────────────────────────────────────────────────────
+// 1. Go to https://supabase.com and create a free project
+// 2. In the SQL Editor run:
+//
+//   create table students (
+//     id uuid default gen_random_uuid() primary key,
+//     player_name text unique not null,
+//     password_hash text,
+//     player_json jsonb default '{}',
+//     progress_json jsonb default '{}',
+//     runs_json jsonb default '[]',
+//     run_state jsonb default '{}',
+//     saved_at timestamptz default now()
+//   );
+//   alter table students enable row level security;
+//   create policy "open" on students for all using (true) with check (true);
+//
+// 3. Go to Settings → API and paste your values below
+// =====================================================================
+// =====================================================================
+// ── PASTE YOUR SUPABASE CREDENTIALS HERE ─────────────────────────────
+// Leave as-is to play in Local Mode (saves on this device only).
+// Fill in both values to enable Cloud Mode (any device, teacher dashboard live).
+//
+// 1. Create a free project at https://supabase.com
+// 2. Run this SQL in the SQL Editor:
+//
+//   create table students (
+//     id uuid default gen_random_uuid() primary key,
+//     player_name text unique not null,
+//     password_hash text,
+//     player_json jsonb default '{}',
+//     progress_json jsonb default '{}',
+//     runs_json jsonb default '[]',
+//     run_state jsonb default '{}',
+//     saved_at timestamptz default now()
+//   );
+//   alter table students enable row level security;
+//   create policy "open" on students for all using (true) with check (true);
+//
+// 3. Go to Settings → API and paste your values below:
+// =====================================================================
+const SUPABASE_URL      = 'https://evpyipiksqotuyrxultw.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2cHlpcGlrc3FvdHV5cnh1bHR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNzczOTksImV4cCI6MjA5MTY1MzM5OX0.-5rVpSX833M9yF_Y_lkq1C5q9PzMxjpqAYOtzJumCeU';
+
+// Automatically detects which mode to use — do not edit this line
+const USE_CLOUD = !SUPABASE_URL.includes('PASTE_') && !SUPABASE_ANON_KEY.includes('PASTE_');
+
+// Warn if URL looks malformed
+if (USE_CLOUD) {
+  if (!SUPABASE_URL.startsWith('https://')) {
+    console.error('AFDA Quest: SUPABASE_URL must start with https://  Current value:', SUPABASE_URL);
+  }
+  if (SUPABASE_URL.endsWith('/')) {
+    console.error('AFDA Quest: SUPABASE_URL must NOT have a trailing slash. Current value:', SUPABASE_URL);
+  }
+  if (SUPABASE_ANON_KEY.length < 100) {
+    console.error('AFDA Quest: SUPABASE_ANON_KEY looks too short — make sure you copied the full key.');
+  }
+}
+
+const SAVE_KEY   = 'afdaquest_saves';   // localStorage key (local mode)
+const TEACHER_PW = 'AFDA2025';         // Change this to your own password
+
+let _pendingSaveName = '';
+let _pendingSave     = null;
+let _isPasswordReset = false;
+
+// ── djb2 hash — passwords never stored as plain text ─────────────────
+function hashPw(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) + h) ^ str.charCodeAt(i);
+  return (h >>> 0).toString(16);
+}
+
+// ── Loading overlay ───────────────────────────────────────────────────
+function showLoading(on, msg = 'Loading...') {
+  const el = document.getElementById('loading-overlay');
+  document.getElementById('loading-text').textContent = msg;
+  el.classList.toggle('show', on);
+}
+
+function flashSaveIndicator() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── Supabase REST helper ──────────────────────────────────────────────
+async function sb(path, method = 'GET', body = null, prefer = '') {
+  const headers = {
+    'apikey': SUPABASE_ANON_KEY,
+    'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+    'Content-Type': 'application/json'
+  };
+  if (prefer) headers['Prefer'] = prefer;
+  const opts = { method, headers };
+  if (body !== null) opts.body = JSON.stringify(body);
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || res.statusText);
+  return text ? JSON.parse(text) : [];
+}
+
+// ── LOCAL MODE helpers (localStorage) ────────────────────────────────
+function localGetAll() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || []; }
+  catch(e) { return []; }
+}
+function localWrite(saves) {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(saves));
+}
+function localGetByName(name) {
+  return localGetAll().find(s => s.player_name === name) || null;
+}
+function localUpsert(row) {
+  const saves = localGetAll();
+  const idx = saves.findIndex(s => s.player_name === row.player_name);
+  if (idx >= 0) saves[idx] = { ...saves[idx], ...row };
+  else saves.push(row);
+  localWrite(saves);
+}
+function localDelete(name) {
+  localWrite(localGetAll().filter(s => s.player_name !== name));
+}
+function localClear() {
+  localStorage.removeItem(SAVE_KEY);
+}
+
+// ── UNIFIED DB API — same interface regardless of mode ────────────────
+async function getAllSaves() {
+  if (USE_CLOUD) return sb('students?select=*&order=saved_at.desc');
+  return localGetAll().sort((a,b) => new Date(b.saved_at) - new Date(a.saved_at));
+}
+
+async function getSaveForName(name) {
+  if (USE_CLOUD) {
+    const rows = await sb('students?player_name=eq.' + encodeURIComponent(name) + '&select=*');
+    return rows[0] || null;
+  }
+  return localGetByName(name);
+}
+
+async function saveGame(silent) {
+  // Only store run_state when there's an active mid-dungeon run
+  // If _savedRunState was cleared (dungeon finished or abandoned), write empty {}
+  const activeRun = G.dungeon && G._savedRunState !== null;
+  const runState = activeRun ? {
+    runXP:           G.runXP,
+    runCorrect:      G.runCorrect,
+    runTotal:        G.runTotal,
+    floorIdx:        G.floorIdx,
+    qIdx:            G.qIdx,
+    currentDungeonId: G.dungeon.id
+  } : {};
+  const row = {
+    player_name:   G.player.name,
+    player_json:   G.player,
+    progress_json: G.progress,
+    runs_json:     G.runs,
+    run_state:     runState,
+    saved_at:      new Date().toISOString()
+  };
+  if (USE_CLOUD) {
+    await sb('students?player_name=eq.' + encodeURIComponent(G.player.name),
+             'PATCH', row, 'return=minimal');
+  } else {
+    localUpsert(row);
+  }
+  if (!silent) flashSaveIndicator();
+}
+
+async function createRow(row) {
+  if (USE_CLOUD) {
+    await sb('students', 'POST', row, 'resolution=merge-duplicates,return=minimal');
+  } else {
+    localUpsert(row);
+  }
+}
+
+async function patchRow(name, patch) {
+  if (USE_CLOUD) {
+    await sb('students?player_name=eq.' + encodeURIComponent(name),
+             'PATCH', patch, 'return=minimal');
+  } else {
+    const saves = localGetAll();
+    const idx = saves.findIndex(s => s.player_name === name);
+    if (idx >= 0) { Object.assign(saves[idx], patch); localWrite(saves); }
+  }
+}
+
+async function deleteRow(name) {
+  if (USE_CLOUD) {
+    await sb('students?player_name=eq.' + encodeURIComponent(name), 'DELETE', null, '');
+  } else {
+    localDelete(name);
+  }
+}
+
+function applyLoad(save) {
+  G.player   = JSON.parse(JSON.stringify(save.player_json   || {}));
+  G.progress = JSON.parse(JSON.stringify(save.progress_json || {}));
+  G.runs     = JSON.parse(JSON.stringify(save.runs_json     || []));
+  // Restore mid-run state so the resume banner can show on the map
+  const rs = save.run_state || {};
+  G._savedRunState = rs.currentDungeonId ? rs : null;
+}
+
+// =====================================================================
+// SCREEN MANAGER
+// =====================================================================
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+  // Safety net — always kill loading overlay on any screen change
+  const lo = document.getElementById('loading-overlay');
+  if (lo) lo.classList.remove('show');
+}
+
+// =====================================================================
+// TITLE SCREEN
+// =====================================================================
+// Safe event listener binding — prevents null-ref crash if any element is missing
+function safeOn(id, event, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(event, fn);
+  else console.warn('AFDA Quest: element not found:', id);
+}
+safeOn('name-input',       'keydown', e => { if(e.key==='Enter') startGame(); });
+safeOn('pw-input',         'keydown', e => { if(e.key==='Enter') checkTeacherPw(); });
+safeOn('student-pw-input', 'keydown', e => { if(e.key==='Enter') checkStudentPw(); });
+safeOn('new-pw2',          'keydown', e => { if(e.key==='Enter') createPassword(); });
+
+async function startGame() {
+  const n = document.getElementById('name-input').value.trim();
+  if (!n) { document.getElementById('name-input').focus(); return; }
+  _pendingSaveName = n;
+  showLoading(true, 'Looking up your hero...');
+  try {
+    _pendingSave = await getSaveForName(n);
+  } catch(e) {
+    showLoading(false);
+    let hint = '';
+    if (e.message && e.message.includes('Failed to fetch')) {
+      hint = '\n\nThis usually means:\n• Your Supabase URL is wrong or has a typo\n• Your internet connection dropped';
+    } else if (e.message && e.message.includes('relation "students" does not exist')) {
+      hint = '\n\nThe database table has not been created yet.\nGo to Supabase → SQL Editor and run the CREATE TABLE script from the game file.';
+    } else if (e.message && e.message.includes('401') || e.message && e.message.includes('Invalid API key')) {
+      hint = '\n\nYour Supabase Anon Key looks wrong. Double-check you copied the full key from Settings → API.';
+    }
+    alert('⚠️ Could not connect to the cloud database.' + hint + '\n\nSwitching to Local Mode for now.\n\nError: ' + e.message);
+    // Fall through — treat as new student in local mode
+    _pendingSave = null;
+  }
+  showLoading(false);
+
+  if (_pendingSave) {
+    if (_pendingSave.password_hash === null) {
+      // Password was reset — let them set a new one without losing progress
+      _isPasswordReset = true;
+      document.getElementById('new-pw1').value = '';
+      document.getElementById('new-pw2').value = '';
+      document.getElementById('new-pw-error').classList.remove('show');
+      document.getElementById('modal-create-pw').classList.add('show');
+      setTimeout(() => document.getElementById('new-pw1').focus(), 100);
+    } else {
+      // Normal returning login
+      _isPasswordReset = false;
+      renderSavePreview(_pendingSave);
+      document.getElementById('student-pw-input').value = '';
+      document.getElementById('student-pw-error').classList.remove('show');
+      document.getElementById('modal-save').classList.add('show');
+      setTimeout(() => document.getElementById('student-pw-input').focus(), 100);
+    }
+  } else {
+    // Brand-new student
+    _isPasswordReset = false;
+    document.getElementById('new-pw1').value = '';
+    document.getElementById('new-pw2').value = '';
+    document.getElementById('new-pw-error').classList.remove('show');
+    document.getElementById('modal-create-pw').classList.add('show');
+    setTimeout(() => document.getElementById('new-pw1').focus(), 100);
+  }
+}
+
+function renderSavePreview(save) {
+  const p = save.player_json || {};
+  const totalDung = Object.keys(save.progress_json || {}).length;
+  const d = new Date(save.saved_at);
+  const dateStr = d.toLocaleDateString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  const runs = save.runs_json || [];
+  const allCorrect = runs.reduce((a,r) => a + r.correct, 0);
+  const allTotal   = runs.reduce((a,r) => a + r.total,   0);
+  const acc = allTotal > 0 ? Math.round(allCorrect / allTotal * 100) : 0;
+  document.getElementById('save-info-preview').innerHTML = `
+    <div class="si-name">🤴 ${save.player_name}</div>
+    <div class="si-meta">Last played: ${dateStr}</div>
+    <div class="si-stats">
+      <div class="si-stat">Lv. <span>${p.level || 1}</span></div>
+      <div class="si-stat">XP <span>${p.xp || 0}</span></div>
+      <div class="si-stat">Gold <span>${p.gold || 0}</span></div>
+      <div class="si-stat">Dungeons <span>${totalDung}</span></div>
+      <div class="si-stat">Accuracy <span>${acc}%</span></div>
+    </div>`;
+}
+
+async function checkStudentPw() {
+  const val = document.getElementById('student-pw-input').value;
+  if (!val) { document.getElementById('student-pw-input').focus(); return; }
+  const save = _pendingSave;
+  if (!save) return;
+  if (hashPw(val) === save.password_hash) {
+    applyLoad(save);
+    document.getElementById('modal-save').classList.remove('show');
+    renderMap();
+    show('screen-map');
+  } else {
+    document.getElementById('student-pw-error').classList.add('show');
+    document.getElementById('student-pw-input').value = '';
+    document.getElementById('student-pw-input').focus();
+  }
+}
+
+function closeSaveModal() {
+  document.getElementById('modal-save').classList.remove('show');
+}
+
+async function createPassword() {
+  const p1 = document.getElementById('new-pw1').value;
+  const p2 = document.getElementById('new-pw2').value;
+  const errEl = document.getElementById('new-pw-error');
+  if (!p1) {
+    errEl.textContent = '❌ Please enter a password.';
+    errEl.classList.add('show');
+    document.getElementById('new-pw1').focus();
+    return;
+  }
+  if (p1 !== p2) {
+    errEl.textContent = '❌ Passwords do not match. Try again.';
+    errEl.classList.add('show');
+    document.getElementById('new-pw2').value = '';
+    document.getElementById('new-pw2').focus();
+    return;
+  }
+  errEl.classList.remove('show');
+  document.getElementById('modal-create-pw').classList.remove('show');
+
+  if (_isPasswordReset && _pendingSave) {
+    // Just update password on existing account — preserve all progress
+    showLoading(true, 'Saving new password...');
+    try {
+      await patchRow(_pendingSaveName, { password_hash: hashPw(p1) });
+    } catch(e) { alert('Error: ' + e.message); }
+    showLoading(false);
+    applyLoad(_pendingSave);
+    renderMap();
+    show('screen-map');
+  } else {
+    await newGame(hashPw(p1));
+  }
+}
+
+function closeCreatePw() {
+  document.getElementById('modal-create-pw').classList.remove('show');
+}
+
+async function newGame(passwordHash) {
+  G.player   = { name:_pendingSaveName, level:1, xp:0, hp:5, maxHp:5, gold:0 };
+  G.progress = {};
+  G.runs     = [];
+  G.runXP = 0; G.runCorrect = 0; G.runTotal = 0;
+  G.dungeon = null;
+  const row = {
+    player_name:   _pendingSaveName,
+    password_hash: passwordHash || null,
+    player_json:   G.player,
+    progress_json: {},
+    runs_json:     [],
+    run_state:     {},
+    saved_at:      new Date().toISOString()
+  };
+  showLoading(true, 'Creating your hero...');
+  try {
+    await createRow(row);
+  } catch(e) { alert('Error creating account: ' + e.message); }
+  showLoading(false);
+  flashSaveIndicator();
+  renderMap();
+  show('screen-map');
+}
+
+// =====================================================================
+// TEACHER LOGIN
+// =====================================================================
+function openTeacherLogin() {
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').classList.remove('show');
+  document.getElementById('modal-teacher-pw').classList.add('show');
+  setTimeout(() => document.getElementById('pw-input').focus(), 100);
+}
+
+function closeTeacherPw() {
+  document.getElementById('modal-teacher-pw').classList.remove('show');
+}
+
+async function checkTeacherPw() {
+  const val = document.getElementById('pw-input').value.trim();
+  if (val === TEACHER_PW) {
+    closeTeacherPw();
+    showLoading(true, 'Loading dashboard...');
+    try {
+      await renderTeacherDashboard();
+    } finally {
+      showLoading(false);   // always hides overlay even if an error occurs
+    }
+    show('screen-teacher');
+  } else {
+    document.getElementById('pw-error').classList.add('show');
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+
+// =====================================================================
+// MAP SCREEN
+// =====================================================================
+function goToMap() {
+  renderMap();
+  show('screen-map');
+}
+
+function renderMap() {
+  const p = G.player;
+  document.getElementById('map-name').textContent = p.name;
+  document.getElementById('map-title-text').textContent = getTitle(p.level);
+  document.getElementById('map-lvl-lbl').textContent = 'Lv. ' + p.level;
+  const needed = xpNeeded(p.level);
+  const pct = Math.min(100, Math.round(p.xp / needed * 100));
+  document.getElementById('map-xp-lbl').textContent = p.xp + ' / ' + needed + ' XP';
+  document.getElementById('map-xp-bar').style.width = pct + '%';
+  document.getElementById('map-gold').textContent = p.gold;
+  buildHearts('map-hp', p.hp, p.maxHp, true);
+
+  // Show resume banner if there is an in-progress run
+  const rs = G._savedRunState;
+  const banner = document.getElementById('resume-banner');
+  if (rs && rs.currentDungeonId) {
+    const dung = GAME_DATA.dungeons.find(d => d.id === rs.currentDungeonId);
+    if (dung) {
+      const floor = dung.floors[rs.floorIdx || 0];
+      const floorLabel = floor
+        ? (floor.isBoss ? '👑 Boss Floor' : 'Floor ' + ((rs.floorIdx || 0) + 1))
+        : 'Floor 1';
+      const qLabel = 'Question ' + ((rs.qIdx || 0) + 1) + ' of ' + (floor ? floor.questions.length : '?');
+      document.getElementById('rb-icon').textContent = dung.icon;
+      document.getElementById('rb-text').textContent = dung.name + ' — ' + floorLabel;
+      document.getElementById('rb-sub').textContent = qLabel + '  ·  +' + (rs.runXP || 0) + ' XP earned so far';
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  } else {
+    banner.classList.remove('show');
+  }
+
+  const grid = document.getElementById('dungeon-grid');
+  grid.innerHTML = '';
+  GAME_DATA.dungeons.forEach(d => {
+    const cleared = getProgress(d.id);
+    const total = d.floors.length;
+    const stars = cleared >= total ? '⭐⭐⭐' : cleared >= Math.ceil(total/2) ? '⭐⭐' : cleared > 0 ? '⭐' : '✧✧✧';
+    const card = document.createElement('div');
+    card.className = 'd-card';
+    card.style.setProperty('--dc', d.color);
+    card.onclick = () => openIntro(d.id);
+    card.innerHTML = `
+      <div class="dc-top">
+        <div class="dc-icon">${d.icon}</div>
+        <div>
+          <div class="dc-title">${d.name}</div>
+          <div class="dc-std">${d.standard}</div>
+        </div>
+      </div>
+      <div class="dc-desc">${d.description.substring(0,90)}...</div>
+      <div class="dc-monsters">${d.monsters_preview}</div>
+      <div class="dc-footer">
+        <div class="dc-stars">${stars}</div>
+        <div class="dc-enter">Enter →</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+
+// =====================================================================
+// DUNGEON INTRO SCREEN
+// =====================================================================
+function resumeRun() {
+  const rs = G._savedRunState;
+  if (!rs || !rs.currentDungeonId) return;
+  const dung = GAME_DATA.dungeons.find(d => d.id === rs.currentDungeonId);
+  if (!dung) return;
+  G.dungeon     = dung;
+  G.floorIdx    = rs.floorIdx    || 0;
+  G.qIdx        = rs.qIdx        || 0;
+  G.runXP       = rs.runXP       || 0;
+  G.runCorrect  = rs.runCorrect  || 0;
+  G.runTotal    = rs.runTotal    || 0;
+  G._savedRunState = null;
+  document.getElementById('resume-banner').classList.remove('show');
+  loadFloor(true);   // keep G.qIdx — we're resuming mid-floor
+  show('screen-battle');
+}
+
+function abandonRun() {
+  if (!confirm('Abandon your current run? Your dungeon progress is saved but XP from this run will be lost.')) return;
+  G._savedRunState = null;
+  // Clear run_state in DB so the banner won't reappear
+  patchRow(G.player.name, { run_state: {} });
+  document.getElementById('resume-banner').classList.remove('show');
+}
+
+function openIntro(id) {
+  const d = GAME_DATA.dungeons.find(x => x.id === id);
+  G.dungeon = d;
+  const scr = document.getElementById('screen-dungeon-intro');
+  scr.style.setProperty('--dc', d.color);
+  document.getElementById('di-card').style.borderColor = d.color;
+  document.getElementById('di-card').style.setProperty('--dc', d.color);
+  document.getElementById('di-icon').textContent = d.icon;
+  document.getElementById('di-name').textContent = d.name;
+  document.getElementById('di-std').textContent = '⚖️ ' + d.standard;
+  document.getElementById('di-desc').textContent = d.description;
+
+  const dotsDiv = document.getElementById('di-dots');
+  dotsDiv.innerHTML = '';
+  const cleared = getProgress(d.id);
+  d.floors.forEach((f, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'di-dot' + (f.isBoss ? ' boss' : '') + (i < cleared ? ' done' : '');
+    dot.title = (f.isBoss ? '👑 Boss: ' : 'Floor '+(i+1)+': ') + f.monster.name;
+    dotsDiv.appendChild(dot);
+  });
+
+  show('screen-dungeon-intro');
+}
+
+function enterDungeon() {
+  const rs = G._savedRunState;
+  if (rs && rs.currentDungeonId === G.dungeon.id) {
+    // Resume the saved mid-run position for this exact dungeon
+    G.floorIdx   = rs.floorIdx   || 0;
+    G.qIdx       = rs.qIdx       || 0;
+    G.runXP      = rs.runXP      || 0;
+    G.runCorrect = rs.runCorrect || 0;
+    G.runTotal   = rs.runTotal   || 0;
+    G._savedRunState = null;
+  } else {
+    // Fresh start — clear any leftover run state
+    G.floorIdx = 0;
+    G.qIdx = 0;
+    G.runXP = 0;
+    G.runCorrect = 0;
+    G.runTotal = 0;
+    // Save immediately so run_state reflects the new dungeon
+    saveGame(true);
+  }
+  loadFloor();
+  show('screen-battle');
+}
+
+
+// =====================================================================
+// BATTLE SYSTEM
+// =====================================================================
+function loadFloor(keepQIdx) {
+  const floor = G.dungeon.floors[G.floorIdx];
+  if (!keepQIdx) G.qIdx = 0;  // only reset if starting fresh on this floor
+  G.answered = false;
+  G.mMaxHp = floor.questions.length;
+  G.mHp = G.mMaxHp;
+
+  const scr = document.getElementById('screen-battle');
+  scr.style.setProperty('--dc', G.dungeon.color);
+
+  const totalFloors = G.dungeon.floors.length;
+  document.getElementById('bh-floor').textContent =
+    (floor.isBoss ? '⚔️ Boss Floor' : 'Floor '+(G.floorIdx+1)) + ' of ' + totalFloors;
+  document.getElementById('bh-dungeon').textContent = G.dungeon.name;
+
+  document.getElementById('m-emoji').textContent = floor.monster.emoji;
+  document.getElementById('m-name').textContent = floor.monster.name;
+  document.getElementById('m-flavor').textContent = floor.monster.flavor;
+  renderMonsterHP();
+  buildHearts('hud-hearts', G.player.hp, G.player.maxHp, false);
+
+  renderQ();
+}
+
+function renderQ() {
+  const floor = G.dungeon.floors[G.floorIdx];
+  const q = floor.questions[G.qIdx];
+  G.answered = false;
+
+  document.getElementById('q-num').textContent = 'Question '+(G.qIdx+1)+' of '+floor.questions.length;
+  document.getElementById('q-std').textContent = q.standard || G.dungeon.standard;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('b-feedback').className = 'b-feedback';
+  document.getElementById('next-wrap').style.display = 'none';
+  document.getElementById('hud-xp').textContent = '+' + G.runXP;
+
+  const choicesDiv = document.getElementById('choices');
+  choicesDiv.innerHTML = '';
+  const lbls = ['A','B','C','D'];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'c-btn';
+    btn.innerHTML = `<span class="c-label">${lbls[i]}.</span>${opt}`;
+    btn.onclick = () => pickAnswer(i);
+    choicesDiv.appendChild(btn);
+  });
+}
+
+function pickAnswer(sel) {
+  if(G.answered) return;
+  G.answered = true;
+  G.runTotal++;
+
+  const floor = G.dungeon.floors[G.floorIdx];
+  const q = floor.questions[G.qIdx];
+  const right = sel === q.answer;
+
+  document.getElementById('choices').querySelectorAll('.c-btn').forEach((btn, i) => {
+    btn.disabled = true;
+    if(i === q.answer) btn.classList.add('correct');
+    else if(i === sel && !right) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('b-feedback');
+  const em = document.getElementById('m-emoji');
+
+  if(right) {
+    G.runCorrect++;
+    G.mHp = Math.max(0, G.mHp - 1);
+    renderMonsterHP();
+    const gain = floor.isBoss ? 40 : 20;
+    G.runXP += gain;
+    document.getElementById('hud-xp').textContent = '+' + G.runXP;
+    fb.className = 'b-feedback show ok';
+    fb.textContent = '✅ Correct! Great work! +' + gain + ' XP';
+    em.classList.remove('hit'); void em.offsetWidth; em.classList.add('hit');
+    spawnFloat('⚔️ +' + gain + 'XP', '#f5c542');
+  } else {
+    G.player.hp = Math.max(0, G.player.hp - 1);
+    buildHearts('hud-hearts', G.player.hp, G.player.maxHp, false);
+    fb.className = 'b-feedback show bad';
+    fb.innerHTML = '❌ Not quite! <span style="font-weight:600;">' + q.hint + '</span>';
+    em.classList.remove('shake'); void em.offsetWidth; em.classList.add('shake');
+    spawnFloat('💔 −1 HP', '#ff4757');
+  }
+
+  document.getElementById('next-wrap').style.display = 'flex';
+  saveGame(true); // auto-save after every answer
+}
+
+function nextQuestion() {
+  const floor = G.dungeon.floors[G.floorIdx];
+  G.qIdx++;
+  if(G.qIdx >= floor.questions.length) {
+    finishFloor();
+  } else {
+    renderQ();
+  }
+}
+
+function finishFloor() {
+  const floor = G.dungeon.floors[G.floorIdx];
+  const bonus = floor.isBoss ? 100 : 30;
+  G.runXP += bonus;
+
+  // Save progress
+  const prev = getProgress(G.dungeon.id);
+  if(G.floorIdx + 1 > prev) G.progress[G.dungeon.id] = G.floorIdx + 1;
+
+  document.getElementById('fc-icon').textContent = floor.isBoss ? '🏆' : '⚔️';
+  document.getElementById('fc-title').textContent = floor.monster.name + (floor.isBoss ? ' — BOSS DEFEATED!' : ' Defeated!');
+  document.getElementById('fc-sub').textContent =
+    G.runCorrect + '/' + G.runTotal + ' correct so far — you\'re doing great, ' + G.player.name + '!';
+  document.getElementById('fc-xp').textContent = '+' + bonus + ' XP bonus!';
+
+  const last = G.floorIdx >= G.dungeon.floors.length - 1;
+  document.getElementById('fc-btn').textContent = last ? '🏆 Complete Dungeon!' : 'Enter Next Floor →';
+
+  // Save after every floor so progress is never lost
+  saveGame(true);
+
+  show('screen-floor-complete');
+}
+
+function continueFloor() {
+  const last = G.floorIdx >= G.dungeon.floors.length - 1;
+  if(last) {
+    dungeonVictory();
+  } else {
+    G.floorIdx++;
+    saveGame(true);   // save with new floorIdx before showing battle
+    loadFloor();
+    show('screen-battle');
+  }
+}
+
+function retreatToCamp() {
+  goToMap();
+}
+
+function dungeonVictory() {
+  // Award XP and gold
+  G.player.xp += G.runXP;
+  G.player.gold += Math.floor(G.runXP / 2);
+  G.player.hp = Math.min(G.player.maxHp, G.player.hp + 2); // partial restore
+
+  // Level up loop
+  let leveled = false;
+  while(G.player.xp >= xpNeeded(G.player.level) && G.player.level < 10) {
+    G.player.xp -= xpNeeded(G.player.level);
+    G.player.level++;
+    leveled = true;
+  }
+
+  const acc = G.runTotal > 0 ? Math.round(G.runCorrect / G.runTotal * 100) : 0;
+  const stars = acc >= 90 ? '⭐⭐⭐' : acc >= 65 ? '⭐⭐' : '⭐';
+
+  document.getElementById('vic-title').textContent = G.dungeon.name + ' Conquered!';
+  document.getElementById('vic-stars').textContent = stars;
+  document.getElementById('vic-desc').textContent = 'Incredible work, ' + G.player.name + '! The ' + G.dungeon.name + ' has been cleared!';
+  document.getElementById('vic-xp').textContent = '+' + G.runXP;
+  document.getElementById('vic-gold').textContent = '+' + Math.floor(G.runXP / 2);
+  document.getElementById('vic-correct').textContent = G.runCorrect + '/' + G.runTotal;
+  document.getElementById('vic-acc').textContent = acc + '%';
+
+  // Push run record into G.runs then save everything
+  G.runs.push({
+    dungeonId:   G.dungeon.id,
+    dungeonName: G.dungeon.name,
+    correct:     G.runCorrect,
+    total:       G.runTotal,
+    xp:          G.runXP,
+    acc,
+    timestamp:   Date.now()
+  });
+  // Clear run_state — dungeon fully complete, no resume needed
+  G._savedRunState = null;
+  saveGame(); // async — fires with cleared run_state
+
+  show('screen-victory');
+
+  if(leveled) {
+    setTimeout(() => {
+      document.getElementById('lu-num').textContent = G.player.level;
+      document.getElementById('lu-new-title').textContent = getTitle(G.player.level);
+      document.getElementById('overlay-levelup').classList.add('show');
+    }, 700);
+  }
+}
+
+function closeLevelUp() {
+  document.getElementById('overlay-levelup').classList.remove('show');
+}
+
+
+// =====================================================================
+// RENDER HELPERS
+// =====================================================================
+function buildHearts(id, hp, max, small) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.innerHTML = '';
+  for(let i = 0; i < max; i++) {
+    const s = document.createElement('span');
+    s.textContent = i < hp ? '❤️' : '🖤';
+    if(small) s.style.fontSize = '13px';
+    el.appendChild(s);
+  }
+}
+
+function renderMonsterHP() {
+  const el = document.getElementById('m-hearts');
+  el.innerHTML = '';
+  for(let i = 0; i < G.mMaxHp; i++) {
+    const s = document.createElement('span');
+    s.textContent = i < G.mHp ? '💜' : '🖤';
+    el.appendChild(s);
+  }
+}
+
+function spawnFloat(txt, color) {
+  const el = document.createElement('div');
+  el.className = 'float-txt';
+  el.textContent = txt;
+  el.style.color = color;
+  el.style.left = (30 + Math.random() * 30) + '%';
+  el.style.top = '38%';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1500);
+}
+
+
+// =====================================================================
+// TEACHER DASHBOARD
+// =====================================================================
+async function renderTeacherDashboard() {
+  let saves = [];
+  try {
+    saves = await getAllSaves();
+  } catch(e) {
+    document.getElementById('student-list').innerHTML =
+      '<div class="td-empty">⚠️ Could not load data: ' + e.message + '</div>';
+    return;
+  }
+
+  const totalStudents = saves.length;
+  const totalRuns  = saves.reduce((a,s) => a + (s.runs_json||[]).length, 0);
+  const allCorrect = saves.reduce((a,s) => (s.runs_json||[]).reduce((b,r) => b+r.correct, a), 0);
+  const allTotal   = saves.reduce((a,s) => (s.runs_json||[]).reduce((b,r) => b+r.total,   a), 0);
+  const avgAcc = allTotal > 0 ? Math.round(allCorrect/allTotal*100) : 0;
+  const avgLvl = saves.length > 0
+    ? (saves.reduce((a,s) => a + ((s.player_json||{}).level||1), 0) / saves.length).toFixed(1)
+    : 0;
+
+  document.getElementById('td-summary').innerHTML = `
+    <div class="td-stat-card"><div class="td-stat-val">${totalStudents}</div><div class="td-stat-lbl">Students</div></div>
+    <div class="td-stat-card"><div class="td-stat-val">${totalRuns}</div><div class="td-stat-lbl">Total Runs</div></div>
+    <div class="td-stat-card"><div class="td-stat-val">${avgAcc}%</div><div class="td-stat-lbl">Avg Accuracy</div></div>
+    <div class="td-stat-card"><div class="td-stat-val">${avgLvl}</div><div class="td-stat-lbl">Avg Level</div></div>`;
+
+  const list = document.getElementById('student-list');
+  if (saves.length === 0) {
+    list.innerHTML = '<div class="td-empty">🏜️ No student data yet. Students must complete at least one dungeon for their progress to appear here.</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  const sorted = [...saves].sort((a,b) => ((b.player_json||{}).xp||0) - ((a.player_json||{}).xp||0));
+
+  sorted.forEach((save, si) => {
+    const p    = save.player_json   || {};
+    const prog = save.progress_json || {};
+    const runs = save.runs_json     || [];
+    const sc   = runs.reduce((a,r) => a+r.correct, 0);
+    const st   = runs.reduce((a,r) => a+r.total,   0);
+    const acc  = st > 0 ? Math.round(sc/st*100) : 0;
+    const totalDung = Object.keys(prog).length;
+    const dateStr = new Date(save.saved_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const accColor = acc >= 80 ? '#2ecc71' : acc >= 60 ? '#f5c542' : '#ff4757';
+
+    const card = document.createElement('div');
+    card.className = 's-card';
+    card.id = 'scard-'+si;
+
+    let dungHTML = '';
+    GAME_DATA.dungeons.forEach(d => {
+      const cleared = prog[d.id] || 0;
+      const total   = d.floors.length;
+      const pct     = Math.round(cleared/total*100);
+      const dRuns   = runs.filter(r => r.dungeonId === d.id);
+      const dC = dRuns.reduce((a,r)=>a+r.correct,0);
+      const dT = dRuns.reduce((a,r)=>a+r.total,  0);
+      const dAcc = dT > 0 ? Math.round(dC/dT*100) : 0;
+      const stars = cleared>=total ? '⭐⭐⭐' : cleared>=Math.ceil(total/2) ? '⭐⭐' : cleared>0 ? '⭐' : '—';
+      dungHTML += `<div class="s-dungeon-row">
+        <div class="s-dung-top"><div class="s-dung-name">${d.icon} ${d.name}</div><div class="s-dung-stars">${stars}</div></div>
+        <div class="s-dung-bar-bg"><div class="s-dung-bar" style="width:${pct}%;background:${d.color};"></div></div>
+        <div class="s-dung-stats">
+          <div class="s-dung-stat">Floors <span>${cleared}/${total}</span></div>
+          <div class="s-dung-stat">Accuracy <span>${dAcc>0?dAcc+'%':'—'}</span></div>
+          <div class="s-dung-stat">Attempts <span>${dRuns.length}</span></div>
+        </div></div>`;
+    });
+
+    let runsHTML = '';
+    if (runs.length > 0) {
+      const recent = [...runs].reverse().slice(0,8);
+      runsHTML = `<div class="s-run-history"><div class="s-run-title">Recent Runs</div>
+        <table class="s-run-table">
+          <thead><tr><th>Dungeon</th><th>Score</th><th>Acc</th><th>XP</th><th>Date</th></tr></thead>
+          <tbody>` +
+        recent.map(r => {
+          const ds = new Date(r.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+          const rc = r.acc>=80?'#2ecc71':r.acc>=60?'#f5c542':'#ff4757';
+          return `<tr>
+            <td>${r.dungeonName||r.dungeonId}</td>
+            <td>${r.correct}/${r.total}</td>
+            <td style="color:${rc};font-weight:800;">${r.acc}%</td>
+            <td style="color:var(--gold);">+${r.xp}</td>
+            <td>${ds}</td></tr>`;
+        }).join('') +
+        `</tbody></table></div>`;
+    }
+
+    const pwStatus = save.password_hash
+      ? '<span style="color:#2ecc71;font-size:10px;font-weight:800;">🔒 Password set</span>'
+      : '<span style="color:#ff4757;font-size:10px;font-weight:800;">⚠️ No password</span>';
+
+    card.innerHTML = `
+      <div class="s-card-header" onclick="toggleStudent(${si})">
+        <div class="s-left">
+          <div class="s-avatar">🤴</div>
+          <div>
+            <div class="s-name">${save.player_name}</div>
+            <div class="s-subtitle">Lv.${p.level||1} ${getTitle(p.level||1)} · Last seen ${dateStr} · ${pwStatus}</div>
+          </div>
+        </div>
+        <div class="s-right">
+          <div class="s-badge gold">⚡ ${p.xp||0} XP</div>
+          <div class="s-badge blue">💰 ${p.gold||0} Gold</div>
+          <div class="s-badge" style="color:${accColor};border-color:${accColor}33;background:${accColor}11;font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;border:1px solid;">${acc}% Accuracy</div>
+          <div class="s-chevron">▼</div>
+        </div>
+      </div>
+      <div class="s-detail">
+        <div class="s-detail-grid">${dungHTML}</div>
+        ${runsHTML}
+        <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap;">
+          <button class="s-del-btn" onclick="resetStudentPassword('${save.player_name}')" style="background:rgba(79,195,247,.1);border-color:rgba(79,195,247,.3);color:var(--blue);">🔑 Reset Password</button>
+          <button class="s-del-btn" onclick="deleteStudent('${save.player_name}')">🗑️ Delete ${save.player_name}'s Data</button>
+        </div>
+      </div>`;
+
+    list.appendChild(card);
+  });
+}
+
+function toggleStudent(idx) {
+  document.getElementById('scard-'+idx).classList.toggle('expanded');
+}
+
+async function deleteStudent(name) {
+  if (!confirm('Delete all data for ' + name + '? This cannot be undone.')) return;
+  showLoading(true, 'Deleting...');
+  try {
+    await deleteRow(name);
+  } catch(e) { alert('Error: ' + e.message); }
+  showLoading(false);
+  await renderTeacherDashboard();
+}
+
+async function clearAllData() {
+  if (!confirm('Delete ALL student data? This cannot be undone.')) return;
+  showLoading(true, 'Clearing all data...');
+  try {
+    if (USE_CLOUD) {
+      const saves = await getAllSaves();
+      for (const s of saves) await deleteRow(s.player_name);
+    } else {
+      localClear();
+    }
+  } catch(e) { alert('Error: ' + e.message); }
+  showLoading(false);
+  await renderTeacherDashboard();
+}
+
+async function resetStudentPassword(name) {
+  if (!confirm('Reset the password for ' + name + '? They will be asked to create a new one on their next login.')) return;
+  showLoading(true, 'Resetting password...');
+  try {
+    await patchRow(name, { password_hash: null });
+  } catch(e) { alert('Error: ' + e.message); }
+  showLoading(false);
+  alert('✅ Password for ' + name + ' has been reset.');
+  await renderTeacherDashboard();
+}
+
+async function exportCSV() {
+  showLoading(true, 'Building export...');
+  let saves = [];
+  try {
+    saves = await getAllSaves();
+  } catch(e) {
+    alert('Error: ' + e.message);
+    showLoading(false);
+    return;
+  } finally {
+    showLoading(false);
+  }
+  if (saves.length === 0) { alert('No student data to export.'); return; }
+
+  const rows = [['Student','Level','Title','XP','Gold','HP','Dungeons Started','Total Runs','Correct','Total Qs','Accuracy %','Last Saved']];
+  saves.forEach(save => {
+    const p    = save.player_json   || {};
+    const prog = save.progress_json || {};
+    const runs = save.runs_json     || [];
+    const sc   = runs.reduce((a,r)=>a+r.correct,0);
+    const st   = runs.reduce((a,r)=>a+r.total,  0);
+    const acc  = st > 0 ? Math.round(sc/st*100) : 0;
+    const dung = Object.keys(prog).length;
+    const d    = new Date(save.saved_at).toLocaleDateString('en-US');
+    rows.push([save.player_name, p.level||1, getTitle(p.level||1), p.xp||0, p.gold||0, p.hp||5, dung, runs.length, sc, st, acc, d]);
+  });
+  const dungeonHeaders = GAME_DATA.dungeons.map(d => d.name + ' Floors Cleared');
+  rows[0].push(...dungeonHeaders);
+  saves.forEach((save, i) => {
+    const prog = save.progress_json || {};
+    GAME_DATA.dungeons.forEach(d => { rows[i+1].push(prog[d.id] || 0); });
+  });
+
+  const csv  = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'afda_quest_progress_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// =====================================================================
+// BOOT
+// =====================================================================
+(function boot() {
+  try {
+    const banner = document.getElementById('mode-banner');
+    if (USE_CLOUD) {
+      banner.textContent = '☁️ Cloud Mode — progress saves to the database';
+      banner.className = 'mode-banner cloud';
+    } else {
+      banner.textContent = '💾 Local Mode — progress saves to this device only · Add Supabase keys to enable Cloud Mode';
+      banner.className = 'mode-banner local';
+    }
+    show('screen-title');
+  } catch(err) {
+    // Show error visibly on screen so it is not silent
+    document.body.insertAdjacentHTML('beforeend',
+      '<div style="position:fixed;inset:0;background:#0a0a14;color:#ff4757;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center;z-index:9999;">' +
+      '<div style="font-size:36px;">⚠️</div>' +
+      '<div style="font-family:serif;font-size:20px;color:#f5c542;">Script Error on Load</div>' +
+      '<div style="font-size:13px;max-width:500px;line-height:1.7;color:#e8e8f0;">Open the browser Console (F12) and look for a red error. ' +
+      'Common causes: Supabase URL missing <code style="background:#1a1a3a;padding:2px 6px;border-radius:4px;">https://</code>, ' +
+      'extra spaces in the credentials, or the Supabase table not yet created.</div>' +
+      '<div style="font-size:12px;background:#1a1a3a;padding:10px 16px;border-radius:8px;max-width:500px;word-break:break-all;color:#ff8896;">' +
+      err.toString() + '</div></div>');
+    console.error('AFDA Quest boot error:', err);
+  }
+})();
+
+// Global error catch — surfaces any unhandled JS error visibly
+window.addEventListener('unhandledrejection', e => {
+  console.error('AFDA Quest unhandled promise rejection:', e.reason);
+});
+</script>
+</body>
+</html>
